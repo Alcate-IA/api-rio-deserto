@@ -29,18 +29,6 @@ public class CalibracaoEquipamento {
     private String vlFaixaIndicacao;
     private String vlFaixaUsoEquip;
 
-    // ========================
-    // Construtores
-    // ========================
-
-    public CalibracaoEquipamento() {
-        // Construtor padrão necessário
-    }
-
-    // ========================
-    // Getters e Setters
-    // ========================
-
     public Integer getCdCalibracaoEquipamento() {
         return cdCalibracaoEquipamento;
     }
