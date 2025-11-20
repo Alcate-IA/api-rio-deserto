@@ -9,7 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/relatorios")
-public class RelatorioController { //comentário 
+public class RelatorioController { //comentário
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
