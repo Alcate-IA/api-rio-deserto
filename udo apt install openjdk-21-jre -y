@@ -1,0 +1,105 @@
+[32mdefault-jdk[0m/stable 2:1.21-76 amd64
+  kit de desenvolvimento para Java padrão ou Java-compatível
+
+[32mdefault-jdk-doc[0m/stable 2:1.21-76 i386
+  Standard Java or Java compatible Development Kit (documentation)
+
+[32mdefault-jdk-headless[0m/stable 2:1.21-76 amd64
+  kit de desenvolvimento Java padrão ou compatível (sem interface)
+
+[32mdefault-jre[0m/stable 2:1.21-76 amd64
+  ambiente de execução Java padrão ou compatível com Java
+
+[32mdefault-jre-headless[0m/stable 2:1.21-76 amd64
+  executável Java padrão ou compatível (sem interface)
+
+[32mjtreg[0m/stable,stable 5.1-b01-2 all
+  Regression Test Harness for the OpenJDK platform
+
+[32mjtreg6[0m/stable,stable 6.2+1-4 all
+  Regression Test Harness for the OpenJDK platform
+
+[32mjtreg7[0m/stable,stable 7.5.1+1+ds1-3 all
+  Regression Test Harness for the OpenJDK platform
+
+[32mlibasmtools-java[0m/stable,stable 7.0-b09-3 all
+  OpenJDK AsmTools
+
+[32mlibeclipse-collections-java[0m/stable,stable 11.1.0-1 all
+  Eclipse Collections - comprehensive collections library for Java
+
+[32mlibhsdis0-fcml[0m/stable 1.3.0-1.1+b1 amd64
+  HotSpot disassembler plugin using FCML
+
+[32mlibjax-maven-plugin[0m/stable,stable 0.2+dfsg-2 all
+  Using the xjc goal with OpenJDK 11+
+
+[32mlibreoffice[0m/stable 4:25.2.3-2+deb13u2 amd64
+  suíte de produtividade de escritório (metapacote)
+
+[32mlyx[0m/stable 2.4.3-1 amd64
+  processador de documentos
+
+[32mopenjdk-21-dbg[0m/stable,stable-security 21.0.9+10-1~deb13u1 amd64
+  Java de tempo de execução baseado em OpenJDK (símbolos de depuração)
+
+[32mopenjdk-21-demo[0m/stable,stable-security 21.0.9+10-1~deb13u1 amd64
+  runtime Java baseado em OpenJDK (demos e exemplos)
+
+[32mopenjdk-21-doc[0m/stable,stable,stable-security,stable-security 21.0.9+10-1~deb13u1 all
+  documentação do conjunto de desenvolvimento (JDK) do OpenJDK
+
+[32mopenjdk-21-jdk[0m/stable,stable-security,now 21.0.9+10-1~deb13u1 amd64 [instalado]
+  conjunto de desenvolvimento OpenJDK (JDK)
+
+[32mopenjdk-21-jdk-headless[0m/stable,stable-security,now 21.0.9+10-1~deb13u1 amd64 [instalado,automático]
+  kit de desenvolvimento OpenJDK (JDK) (sem interface)
+
+[32mopenjdk-21-jre[0m/stable,stable-security,now 21.0.9+10-1~deb13u1 amd64 [instalado]
+  execução Java OpenJDK usando Hotspot JIT
+
+[32mopenjdk-21-jre-headless[0m/stable,stable-security,now 21.0.9+10-1~deb13u1 amd64 [instalado,automático]
+  ambiente de execução do Java OpenJDK, usando Hotspot JIT (headless)
+
+[32mopenjdk-21-jre-zero[0m/stable,stable-security 21.0.9+10-1~deb13u1 amd64
+  Alternative JVM for OpenJDK, using Zero
+
+[32mopenjdk-21-source[0m/stable,stable,stable-security,stable-security 21.0.9+10-1~deb13u1 all
+  arquivos fonte do kit de desenvolvimento OpenJDK (JDK)
+
+[32mopenjdk-21-testsupport[0m/stable,stable-security 21.0.9+10-1~deb13u1 amd64
+  Java runtime based on OpenJDK (regression test support)
+
+[32mopenjdk-25-dbg[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  Java de tempo de execução baseado em OpenJDK (símbolos de depuração)
+
+[32mopenjdk-25-demo[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  runtime Java baseado em OpenJDK (demos e exemplos)
+
+[32mopenjdk-25-doc[0m/stable,stable,stable-security,stable-security 25.0.1+8-1~deb13u1 all
+  documentação do conjunto de desenvolvimento (JDK) do OpenJDK
+
+[32mopenjdk-25-jdk[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  conjunto de desenvolvimento OpenJDK (JDK)
+
+[32mopenjdk-25-jdk-headless[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  kit de desenvolvimento OpenJDK (JDK) (sem interface)
+
+[32mopenjdk-25-jre[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  execução Java OpenJDK usando Hotspot JIT
+
+[32mopenjdk-25-jre-headless[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  ambiente de execução do Java OpenJDK, usando Hotspot JIT (headless)
+
+[32mopenjdk-25-jre-zero[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  Alternative JVM for OpenJDK, using Zero
+
+[32mopenjdk-25-jvmci-jdk[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  JVMCI-enabled SDK for building graalvm
+
+[32mopenjdk-25-source[0m/stable,stable,stable-security,stable-security 25.0.1+8-1~deb13u1 all
+  arquivos fonte do kit de desenvolvimento OpenJDK (JDK)
+
+[32mopenjdk-25-testsupport[0m/stable,stable-security 25.0.1+8-1~deb13u1 amd64
+  Java runtime based on OpenJDK (regression test support)
+
