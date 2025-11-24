@@ -1,7 +1,9 @@
+# Configuração PostgreSQL
 spring.datasource.url=jdbc:postgresql://192.168.100.95:5432/postgres
 spring.datasource.username=postgres
-spring.datasource.password=SenhaFort3_Postgres!
+spring.datasource.password=F92#xP3a!mQ7Zr41uS8@
 
+# Configurações JPA/Hibernate
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
