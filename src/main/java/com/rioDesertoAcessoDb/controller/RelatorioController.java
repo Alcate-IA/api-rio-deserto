@@ -9,7 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/relatorios")
-public class RelatorioController { //comentário
+public class RelatorioController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -24,42 +24,90 @@ public class RelatorioController { //comentário
                 p.MEDIA_NIVEL_ESTATICO as nivel_estatico
             FROM 
                 (SELECT 
-                    LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
+                    TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
                     AVG(VL_PRECIPITACAO) AS MEDIA_PRECIPITACAO
                  FROM TB_METEOROLOGIA_ITEM
-                 GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+                 GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
                 ) m
             FULL JOIN 
                 (SELECT 
-                    LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
-                    AVG(VL_COTA) AS MEDIA_COTA
-                 FROM TB_NIVEL_AGUA
-                 GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+                    TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
+                    AVG(QT_NIVEL_ESTATICO) AS MEDIA_COTA
+                 FROM TB_NIVEL_AGUA_ITEM
+                 GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
                 ) n ON m.MES_ANO = n.MES_ANO
             FULL JOIN 
                 (SELECT 
-                    LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
+                    TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
                     AVG(QT_NIVEL_ESTATICO) AS MEDIA_NIVEL_ESTATICO
                  FROM TB_INSPECAO_PIEZOMETRO_MVTO
-                 GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+                 GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
                 ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
             ORDER BY 
-                CAST(SUBSTRING(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) FROM 4 FOR 4) AS INTEGER) DESC,
-                CAST(SUBSTRING(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) FROM 1 FOR 2) AS INTEGER) DESC
+                TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO), 'MM/YYYY') DESC
             """;
 
         return jdbcTemplate.queryForList(sql);
     }
 
+    @PostMapping("/medias-mensais")
+    public List<Map<String, Object>> getMediasMensaisPost(@RequestBody FiltroPeriodo filtro) {
+
+        String dataInicio = "01/" + filtro.getMesAnoInicio();
+        String dataFim = "01/" + filtro.getMesAnoFim();
+
+        String sql = """
+        SELECT 
+            COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) AS mes_ano,
+            m.MEDIA_PRECIPITACAO as precipitacao,
+            n.MEDIA_COTA as cota_regua,
+            p.MEDIA_NIVEL_ESTATICO as nivel_estatico
+        FROM 
+            (SELECT 
+                TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
+                AVG(VL_PRECIPITACAO) AS MEDIA_PRECIPITACAO
+             FROM TB_METEOROLOGIA_ITEM
+             WHERE DT_INCLUSAO >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+            ) m
+        FULL JOIN 
+            (SELECT 
+                TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
+                AVG(QT_NIVEL_ESTATICO) AS MEDIA_COTA
+             FROM TB_NIVEL_AGUA_ITEM
+             WHERE DT_INCLUSAO >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+            ) n ON m.MES_ANO = n.MES_ANO
+        FULL JOIN 
+            (SELECT 
+                TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
+                AVG(QT_NIVEL_ESTATICO) AS MEDIA_NIVEL_ESTATICO
+             FROM TB_INSPECAO_PIEZOMETRO_MVTO
+             WHERE DT_INCLUSAO >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+            ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
+        ORDER BY 
+            TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO), 'MM/YYYY') DESC
+        """;
+
+        return jdbcTemplate.queryForList(sql,
+                dataInicio, dataFim,
+                dataInicio, dataFim,
+                dataInicio, dataFim
+        );
+    }
+
+    //lembrar de passar assim: http://localhost:8080/relatorios/medias-mensais?mesAnoInicio=01/2023&mesAnoFim=12/2023
     @GetMapping("/medias-mensais")
     public List<Map<String, Object>> getMediasMensais(
             @RequestParam String mesAnoInicio,
             @RequestParam String mesAnoFim) {
 
-        int anoInicio = Integer.parseInt(mesAnoInicio.substring(3));
-        int mesInicio = Integer.parseInt(mesAnoInicio.substring(0, 2));
-        int anoFim = Integer.parseInt(mesAnoFim.substring(3));
-        int mesFim = Integer.parseInt(mesAnoFim.substring(0, 2));
+        String dataInicio = "01/" + mesAnoInicio;
+        String dataFim = "01/" + mesAnoFim;
 
         String sql = """
         SELECT 
@@ -69,105 +117,39 @@ public class RelatorioController { //comentário
             p.MEDIA_NIVEL_ESTATICO as nivel_estatico
         FROM 
             (SELECT 
-                LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
+                TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
                 AVG(VL_PRECIPITACAO) AS MEDIA_PRECIPITACAO
              FROM TB_METEOROLOGIA_ITEM
-             WHERE (EXTRACT(YEAR FROM DT_INCLUSAO) > ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) >= ?))
-               AND (EXTRACT(YEAR FROM DT_INCLUSAO) < ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) <= ?))
-             GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+             WHERE DT_INCLUSAO >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
             ) m
         FULL JOIN 
             (SELECT 
-                LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
-                AVG(VL_COTA) AS MEDIA_COTA
-             FROM TB_NIVEL_AGUA
-             WHERE (EXTRACT(YEAR FROM DT_INCLUSAO) > ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) >= ?))
-               AND (EXTRACT(YEAR FROM DT_INCLUSAO) < ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) <= ?))
-             GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+                TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
+                AVG(QT_NIVEL_ESTATICO) AS MEDIA_COTA
+             FROM TB_NIVEL_AGUA_ITEM
+             WHERE DT_INCLUSAO >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
             ) n ON m.MES_ANO = n.MES_ANO
         FULL JOIN 
             (SELECT 
-                LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
+                TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
                 AVG(QT_NIVEL_ESTATICO) AS MEDIA_NIVEL_ESTATICO
              FROM TB_INSPECAO_PIEZOMETRO_MVTO
-             WHERE (EXTRACT(YEAR FROM DT_INCLUSAO) > ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) >= ?))
-               AND (EXTRACT(YEAR FROM DT_INCLUSAO) < ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) <= ?))
-             GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
+             WHERE DT_INCLUSAO >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
             ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
         ORDER BY 
-            CAST(SUBSTRING(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) FROM 4 FOR 4) AS INTEGER) DESC,
-            CAST(SUBSTRING(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) FROM 1 FOR 2) AS INTEGER) DESC
+            TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO), 'MM/YYYY') DESC
         """;
 
         return jdbcTemplate.queryForList(sql,
-                anoInicio-1, anoInicio, mesInicio, anoFim+1, anoFim, mesFim,
-                anoInicio-1, anoInicio, mesInicio, anoFim+1, anoFim, mesFim,
-                anoInicio-1, anoInicio, mesInicio, anoFim+1, anoFim, mesFim
-        );
-    }
-
-    @PostMapping("/medias-mensais")
-    public List<Map<String, Object>> getMediasMensaisPost(@RequestBody FiltroPeriodo filtro) {
-
-        int anoInicio = Integer.parseInt(filtro.getMesAnoInicio().substring(3));
-        int mesInicio = Integer.parseInt(filtro.getMesAnoInicio().substring(0, 2));
-        int anoFim = Integer.parseInt(filtro.getMesAnoFim().substring(3));
-        int mesFim = Integer.parseInt(filtro.getMesAnoFim().substring(0, 2));
-
-        String sql = """
-        SELECT 
-            COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) AS mes_ano,
-            m.MEDIA_PRECIPITACAO as precipitacao,
-            n.MEDIA_COTA as cota_regua,
-            p.MEDIA_NIVEL_ESTATICO as nivel_estatico
-        FROM 
-            (SELECT 
-                LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
-                AVG(VL_PRECIPITACAO) AS MEDIA_PRECIPITACAO
-             FROM TB_METEOROLOGIA_ITEM
-             WHERE (EXTRACT(YEAR FROM DT_INCLUSAO) > ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) >= ?))
-               AND (EXTRACT(YEAR FROM DT_INCLUSAO) < ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) <= ?))
-             GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
-            ) m
-        FULL JOIN 
-            (SELECT 
-                LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
-                AVG(VL_COTA) AS MEDIA_COTA
-             FROM TB_NIVEL_AGUA
-             WHERE (EXTRACT(YEAR FROM DT_INCLUSAO) > ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) >= ?))
-               AND (EXTRACT(YEAR FROM DT_INCLUSAO) < ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) <= ?))
-             GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
-            ) n ON m.MES_ANO = n.MES_ANO
-        FULL JOIN 
-            (SELECT 
-                LPAD(EXTRACT(MONTH FROM DT_INCLUSAO), 2, '0') || '/' || EXTRACT(YEAR FROM DT_INCLUSAO) AS MES_ANO,
-                AVG(QT_NIVEL_ESTATICO) AS MEDIA_NIVEL_ESTATICO
-             FROM TB_INSPECAO_PIEZOMETRO_MVTO
-             WHERE (EXTRACT(YEAR FROM DT_INCLUSAO) > ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) >= ?))
-               AND (EXTRACT(YEAR FROM DT_INCLUSAO) < ? OR 
-                   (EXTRACT(YEAR FROM DT_INCLUSAO) = ? AND EXTRACT(MONTH FROM DT_INCLUSAO) <= ?))
-             GROUP BY EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
-            ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
-        ORDER BY 
-            CAST(SUBSTRING(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) FROM 4 FOR 4) AS INTEGER) DESC,
-            CAST(SUBSTRING(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) FROM 1 FOR 2) AS INTEGER) DESC
-        """;
-
-        return jdbcTemplate.queryForList(sql,
-                anoInicio-1, anoInicio, mesInicio, anoFim+1, anoFim, mesFim,
-                anoInicio-1, anoInicio, mesInicio, anoFim+1, anoFim, mesFim,
-                anoInicio-1, anoInicio, mesInicio, anoFim+1, anoFim, mesFim
+                dataInicio, dataFim,
+                dataInicio, dataFim,
+                dataInicio, dataFim
         );
     }
 
