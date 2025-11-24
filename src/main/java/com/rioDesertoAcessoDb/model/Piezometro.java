@@ -1,114 +1,50 @@
 package com.rioDesertoAcessoDb.model;
 
+import jakarta.persistence.*;
+import lombok.Data;
 import java.time.LocalDateTime;
 
+@Data
+@Entity
+@Table(name = "TB_PIEZOMETRO")
 public class Piezometro {
+
+    @Id
+    @Column(name = "CD_PIEZOMETRO")
     private Integer cdPiezometro;
+
+    @Column(name = "CD_EMPRESA", nullable = false)
     private Integer cdEmpresa;
-    private String idPiezometro;
-    private String nmPiezometro;
-    private String tpPiezometro;
-    private String dsObservacao;
-    private String fgSituacao;
-    private Integer cdUsuarioInclusao;
-    private LocalDateTime dtInclusao;
-    private Integer cdUsuarioAlteracao;
-    private LocalDateTime dtAlteracao;
+
+    @Column(name = "CD_BACIA")
     private Integer cdBacia;
 
-    public Integer getCdPiezometro() {
-        return cdPiezometro;
-    }
+    @Column(name = "ID_PIEZOMETRO", nullable = false, length = 100)
+    private String idPiezometro;
 
-    public void setCdPiezometro(Integer cdPiezometro) {
-        this.cdPiezometro = cdPiezometro;
-    }
+    @Column(name = "NM_PIEZOMETRO", nullable = false, length = 150)
+    private String nmPiezometro;
 
-    public Integer getCdEmpresa() {
-        return cdEmpresa;
-    }
+    @Column(name = "TP_PIEZOMETRO", nullable = false, length = 2)
+    private String tpPiezometro;
 
-    public void setCdEmpresa(Integer cdEmpresa) {
-        this.cdEmpresa = cdEmpresa;
-    }
+//    @Column(name = "DS_OBSERVACAO") //NÃO APAGUE ESSE COMENTÁRIO
+//    @Lob
+//    private String dsObservacao;
+// tem que converter esse cara, deixar comentado por enquanto, se precisarmos vou atrás, vou deixar no código para a gente não esquecer que existe
 
-    public String getIdPiezometro() {
-        return idPiezometro;
-    }
+    @Column(name = "FG_SITUACAO", nullable = false, length = 1)
+    private String fgSituacao;
 
-    public void setIdPiezometro(String idPiezometro) {
-        this.idPiezometro = idPiezometro;
-    }
+    @Column(name = "CD_USUARIO_INCLUSAO", nullable = false)
+    private Integer cdUsuarioInclusao;
 
-    public String getNmPiezometro() {
-        return nmPiezometro;
-    }
+    @Column(name = "DT_INCLUSAO", nullable = false)
+    private LocalDateTime dtInclusao;
 
-    public void setNmPiezometro(String nmPiezometro) {
-        this.nmPiezometro = nmPiezometro;
-    }
+    @Column(name = "CD_USUARIO_ALTERACAO", nullable = false)
+    private Integer cdUsuarioAlteracao;
 
-    public String getTpPiezometro() {
-        return tpPiezometro;
-    }
-
-    public void setTpPiezometro(String tpPiezometro) {
-        this.tpPiezometro = tpPiezometro;
-    }
-
-    public String getDsObservacao() {
-        return dsObservacao;
-    }
-
-    public void setDsObservacao(String dsObservacao) {
-        this.dsObservacao = dsObservacao;
-    }
-
-    public String getFgSituacao() {
-        return fgSituacao;
-    }
-
-    public void setFgSituacao(String fgSituacao) {
-        this.fgSituacao = fgSituacao;
-    }
-
-    public Integer getCdUsuarioInclusao() {
-        return cdUsuarioInclusao;
-    }
-
-    public void setCdUsuarioInclusao(Integer cdUsuarioInclusao) {
-        this.cdUsuarioInclusao = cdUsuarioInclusao;
-    }
-
-    public LocalDateTime getDtInclusao() {
-        return dtInclusao;
-    }
-
-    public void setDtInclusao(LocalDateTime dtInclusao) {
-        this.dtInclusao = dtInclusao;
-    }
-
-    public Integer getCdUsuarioAlteracao() {
-        return cdUsuarioAlteracao;
-    }
-
-    public void setCdUsuarioAlteracao(Integer cdUsuarioAlteracao) {
-        this.cdUsuarioAlteracao = cdUsuarioAlteracao;
-    }
-
-    public LocalDateTime getDtAlteracao() {
-        return dtAlteracao;
-    }
-
-    public void setDtAlteracao(LocalDateTime dtAlteracao) {
-        this.dtAlteracao = dtAlteracao;
-    }
-
-    public Integer getCdBacia() {
-        return cdBacia;
-    }
-
-    public void setCdBacia(Integer cdBacia) {
-        this.cdBacia = cdBacia;
-    }
+    @Column(name = "DT_ALTERACAO", nullable = false)
+    private LocalDateTime dtAlteracao;
 }

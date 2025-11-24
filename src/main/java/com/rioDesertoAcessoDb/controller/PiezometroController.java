@@ -1,12 +1,11 @@
 package com.rioDesertoAcessoDb.controller;
 
 import com.rioDesertoAcessoDb.model.Piezometro;
+import com.rioDesertoAcessoDb.dtos.PiezometroAtivoDTO;
+import com.rioDesertoAcessoDb.repositories.PiezometroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -14,11 +13,15 @@ import java.util.List;
 public class PiezometroController {
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private PiezometroRepository piezometroRepository;
 
     @GetMapping
     public List<Piezometro> getAllPiezometros() {
-        String sql = "SELECT * FROM TB_PIEZOMETRO";
-        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Piezometro.class));
+        return piezometroRepository.findAll();
+    }
+
+    @GetMapping("/ativos")
+    public List<PiezometroAtivoDTO> getPiezometrosAtivosComDTO() {
+        return piezometroRepository.findAtivosSimplificadoDTO();
     }
 }
