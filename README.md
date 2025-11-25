@@ -78,3 +78,22 @@ Lucas pediu essa API para ter acessos alguns dados no aplicativo, retorna alguns
         "nomePiezometro": "Furo de sonda CM-181",
         "situacaoPiezometro": "A"
     },
+
+GET http://localhost:8080/relatorios/piezometro/572/filtro?mesAnoInicio=01/2023&mesAnoFim=12/2023     <----- trocar o 572 pelo cd_pieozometro de sua escolha e as datas também
+
+Essa com filtro de data
+
+http://localhost:8080/relatorios/piezometro/572   <----- trocar o 572 pelo cd_pieozometro de sua escolha
+
+E essa sem filtro de data, trazendo todos os dados do sistema
+
+ambas retornam os mesmos dados
+
+    {
+        "cota_superficie": 214.1700,
+        "cota_base": 184.9500,
+        "mes_ano": "2025-11-01",
+        "precipitacao": 247.00,
+        "vazao_bombeamento": null,
+        "nivel_estatico": null
+    },
