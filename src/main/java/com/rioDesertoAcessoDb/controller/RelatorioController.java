@@ -183,6 +183,114 @@ public class RelatorioController {
         );
     }
 
+    @GetMapping("/piezometro/{cdPiezometro}")
+    public List<Map<String, Object>> getDadosPiezometro(@PathVariable Integer cdPiezometro) {
+        String sql = """
+            SELECT 
+                ip.qt_cota_superficie AS cota_superficie,
+                ip.qt_cota_base AS cota_base,
+                COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
+                p.precipitacao_total AS precipitacao,
+                v.vazao_bombeamento AS vazao_bombeamento,
+                n.media_nivel_estatico AS nivel_estatico
+            FROM 
+                (SELECT 
+                    DATE_TRUNC('month', dt_item)::date AS mes_ano,
+                    SUM(vl_precipitacao) AS precipitacao_total
+                 FROM tb_meteorologia_item
+                 GROUP BY DATE_TRUNC('month', dt_item)
+                ) p
+            FULL JOIN 
+                (SELECT 
+                    mes_ano_vazao AS mes_ano,
+                    vazao_bombeamento
+                 FROM tb_vazao_mina
+                ) v ON p.mes_ano = v.mes_ano
+            FULL JOIN 
+                (SELECT 
+                    DATE_TRUNC('month', ipm.dt_inclusao)::date AS mes_ano,
+                    AVG(ipm.qt_nivel_estatico) AS media_nivel_estatico
+                 FROM tb_inspecao_piezometro_mvto ipm
+                 INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
+                 WHERE ip.cd_piezometro = ?
+                 GROUP BY DATE_TRUNC('month', ipm.dt_inclusao)
+                ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
+            CROSS JOIN (
+                SELECT qt_cota_superficie, qt_cota_base 
+                FROM tb_inspecao_piezometro 
+                WHERE cd_piezometro = ?
+                LIMIT 1
+            ) ip
+            ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) DESC
+            """;
+
+        return jdbcTemplate.queryForList(sql, cdPiezometro, cdPiezometro);
+    }
+
+    @GetMapping("/piezometro/{cdPiezometro}/filtro")
+    public List<Map<String, Object>> getDadosPiezometroComFiltro(
+            @PathVariable Integer cdPiezometro,
+            @RequestParam String mesAnoInicio,
+            @RequestParam String mesAnoFim) {
+
+        String dataInicio = "01/" + mesAnoInicio;
+        String dataFim = "01/" + mesAnoFim;
+
+        String sql = """
+            SELECT 
+                ip.qt_cota_superficie AS cota_superficie,
+                ip.qt_cota_base AS cota_base,
+                COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
+                p.precipitacao_total AS precipitacao,
+                v.vazao_bombeamento AS vazao_bombeamento,
+                n.media_nivel_estatico AS nivel_estatico
+            FROM 
+                (SELECT 
+                    DATE_TRUNC('month', dt_item)::date AS mes_ano,
+                    SUM(vl_precipitacao) AS precipitacao_total
+                 FROM tb_meteorologia_item
+                 WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
+                   AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
+                 GROUP BY DATE_TRUNC('month', dt_item)
+                ) p
+            FULL JOIN 
+                (SELECT 
+                    mes_ano_vazao AS mes_ano,
+                    vazao_bombeamento
+                 FROM tb_vazao_mina
+                 WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
+                   AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
+                ) v ON p.mes_ano = v.mes_ano
+            FULL JOIN 
+                (SELECT 
+                    DATE_TRUNC('month', ipm.dt_inclusao)::date AS mes_ano,
+                    AVG(ipm.qt_nivel_estatico) AS media_nivel_estatico
+                 FROM tb_inspecao_piezometro_mvto ipm
+                 INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
+                 WHERE ip.cd_piezometro = ?
+                   AND ipm.dt_inclusao >= TO_DATE(?, 'DD/MM/YYYY') 
+                   AND ipm.dt_inclusao <= TO_DATE(?, 'DD/MM/YYYY')
+                 GROUP BY DATE_TRUNC('month', ipm.dt_inclusao)
+                ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
+            CROSS JOIN (
+                SELECT qt_cota_superficie, qt_cota_base 
+                FROM tb_inspecao_piezometro 
+                WHERE cd_piezometro = ?
+                LIMIT 1
+            ) ip
+            ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) DESC
+            """;
+
+        return jdbcTemplate.queryForList(sql,
+                dataInicio, dataFim,
+                dataInicio, dataFim,
+                cdPiezometro,
+                dataInicio, dataFim,
+                cdPiezometro
+        );
+    }
+
+
     public static class FiltroPeriodo {
         private String mesAnoInicio;
         private String mesAnoFim;
