@@ -18,10 +18,11 @@ public class RelatorioController {
     public List<Map<String, Object>> getMediasMensais() {
         String sql = """
             SELECT 
-                COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) AS mes_ano,
+                COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO, v.MES_ANO) AS mes_ano,
                 m.MEDIA_PRECIPITACAO as precipitacao,
                 n.MEDIA_COTA as cota_regua,
-                p.MEDIA_NIVEL_ESTATICO as nivel_estatico
+                p.MEDIA_NIVEL_ESTATICO as nivel_estatico,
+                v.VAZAO_BOMBEAMENTO as vazao_bombeamento
             FROM 
                 (SELECT 
                     TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
@@ -43,8 +44,15 @@ public class RelatorioController {
                  FROM TB_INSPECAO_PIEZOMETRO_MVTO
                  GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
                 ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
+            FULL JOIN
+                (SELECT 
+                    TO_CHAR(mes_ano_vazao, 'MM/YYYY') AS MES_ANO,
+                    AVG(vazao_bombeamento) AS VAZAO_BOMBEAMENTO
+                 FROM TB_VAZAO_MINA
+                 GROUP BY TO_CHAR(mes_ano_vazao, 'MM/YYYY'), EXTRACT(YEAR FROM mes_ano_vazao), EXTRACT(MONTH FROM mes_ano_vazao)
+                ) v ON COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) = v.MES_ANO
             ORDER BY 
-                TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO), 'MM/YYYY') DESC
+                TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO, v.MES_ANO), 'MM/YYYY') DESC
             """;
 
         return jdbcTemplate.queryForList(sql);
@@ -58,10 +66,11 @@ public class RelatorioController {
 
         String sql = """
         SELECT 
-            COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) AS mes_ano,
+            COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO, v.MES_ANO) AS mes_ano,
             m.MEDIA_PRECIPITACAO as precipitacao,
             n.MEDIA_COTA as cota_regua,
-            p.MEDIA_NIVEL_ESTATICO as nivel_estatico
+            p.MEDIA_NIVEL_ESTATICO as nivel_estatico,
+            v.VAZAO_BOMBEAMENTO as vazao_bombeamento
         FROM 
             (SELECT 
                 TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
@@ -89,11 +98,21 @@ public class RelatorioController {
                AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
              GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
             ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
+        FULL JOIN
+            (SELECT 
+                TO_CHAR(mes_ano_vazao, 'MM/YYYY') AS MES_ANO,
+                AVG(vazao_bombeamento) AS VAZAO_BOMBEAMENTO
+             FROM TB_VAZAO_MINA
+             WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND mes_ano_vazao <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(mes_ano_vazao, 'MM/YYYY'), EXTRACT(YEAR FROM mes_ano_vazao), EXTRACT(MONTH FROM mes_ano_vazao)
+            ) v ON COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) = v.MES_ANO
         ORDER BY 
-            TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO), 'MM/YYYY') DESC
+            TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO, v.MES_ANO), 'MM/YYYY') DESC
         """;
 
         return jdbcTemplate.queryForList(sql,
+                dataInicio, dataFim,
                 dataInicio, dataFim,
                 dataInicio, dataFim,
                 dataInicio, dataFim
@@ -111,10 +130,11 @@ public class RelatorioController {
 
         String sql = """
         SELECT 
-            COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) AS mes_ano,
+            COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO, v.MES_ANO) AS mes_ano,
             m.MEDIA_PRECIPITACAO as precipitacao,
             n.MEDIA_COTA as cota_regua,
-            p.MEDIA_NIVEL_ESTATICO as nivel_estatico
+            p.MEDIA_NIVEL_ESTATICO as nivel_estatico,
+            v.VAZAO_BOMBEAMENTO as vazao_bombeamento
         FROM 
             (SELECT 
                 TO_CHAR(DT_INCLUSAO, 'MM/YYYY') AS MES_ANO,
@@ -142,11 +162,21 @@ public class RelatorioController {
                AND DT_INCLUSAO <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
              GROUP BY TO_CHAR(DT_INCLUSAO, 'MM/YYYY'), EXTRACT(YEAR FROM DT_INCLUSAO), EXTRACT(MONTH FROM DT_INCLUSAO)
             ) p ON COALESCE(m.MES_ANO, n.MES_ANO) = p.MES_ANO
+        FULL JOIN
+            (SELECT 
+                TO_CHAR(mes_ano_vazao, 'MM/YYYY') AS MES_ANO,
+                AVG(vazao_bombeamento) AS VAZAO_BOMBEAMENTO
+             FROM TB_VAZAO_MINA
+             WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND mes_ano_vazao <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
+             GROUP BY TO_CHAR(mes_ano_vazao, 'MM/YYYY'), EXTRACT(YEAR FROM mes_ano_vazao), EXTRACT(MONTH FROM mes_ano_vazao)
+            ) v ON COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO) = v.MES_ANO
         ORDER BY 
-            TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO), 'MM/YYYY') DESC
+            TO_DATE(COALESCE(m.MES_ANO, n.MES_ANO, p.MES_ANO, v.MES_ANO), 'MM/YYYY') DESC
         """;
 
         return jdbcTemplate.queryForList(sql,
+                dataInicio, dataFim,
                 dataInicio, dataFim,
                 dataInicio, dataFim,
                 dataInicio, dataFim
