@@ -97,3 +97,17 @@ ambas retornam os mesmos dados
         "vazao_bombeamento": null,
         "nivel_estatico": null
     },
+
+GET http://localhost:8080/relatorios/regua/823/filtro?mesAnoInicio=01/2023&mesAnoFim=12/2023   <------ 823 cd_piezometro e datas a escolha
+
+GET http://localhost:8080/relatorios/regua/823  <------ 823 cd_piezometro e datas a escolha
+
+Retorno esperado: 
+
+    {
+        "cota_superficie": 18.2470,
+        "mes_ano": "2025-11-01",
+        "precipitacao": 247.00,
+        "vazao_bombeamento": null,
+        "nivel_estatico": null
+    },
