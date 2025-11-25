@@ -69,3 +69,12 @@ Body raw:
 "mesAnoInicio": "01/2023",
 "mesAnoFim": "12/2024"
 }
+
+GET  http://localhost:8080/piezometros/ativos  
+Lucas pediu essa API para ter acessos alguns dados no aplicativo, retorna alguns dados dos poços / piezometros, segue o retorno esperado:
+
+    {
+        "idPiezometro": "PZ 44",
+        "nomePiezometro": "Furo de sonda CM-181",
+        "situacaoPiezometro": "A"
+    },
