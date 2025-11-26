@@ -198,6 +198,7 @@ public class RelatorioController {
                     DATE_TRUNC('month', dt_item)::date AS mes_ano,
                     SUM(vl_precipitacao) AS precipitacao_total
                  FROM tb_meteorologia_item
+                 WHERE cd_meteorologia = 12
                  GROUP BY DATE_TRUNC('month', dt_item)
                 ) p
             FULL JOIN 
@@ -250,7 +251,8 @@ public class RelatorioController {
                     SUM(vl_precipitacao) AS precipitacao_total
                  FROM tb_meteorologia_item
                  WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
-                   AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
+                   AND dt_item <= TO_DATE(?, 'DD/MM/YYYY') 
+                   AND cd_meteorologia = 12
                  GROUP BY DATE_TRUNC('month', dt_item)
                 ) p
             FULL JOIN 
@@ -304,6 +306,7 @@ public class RelatorioController {
                 DATE_TRUNC('month', dt_item)::date AS mes_ano,
                 SUM(vl_precipitacao) AS precipitacao_total
              FROM tb_meteorologia_item
+             WHERE cd_meteorologia = 12
              GROUP BY DATE_TRUNC('month', dt_item)
             ) p
         FULL JOIN 
@@ -356,6 +359,7 @@ public class RelatorioController {
              FROM tb_meteorologia_item
              WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
                AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
+               AND cd_meteorologia = 12
              GROUP BY DATE_TRUNC('month', dt_item)
             ) p
         FULL JOIN 
