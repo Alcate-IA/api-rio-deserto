@@ -12,9 +12,9 @@ import java.util.List;
 @Repository
 public interface PiezometroRepository extends JpaRepository<Piezometro, Integer> {
 
-    @Query("SELECT new com.rioDesertoAcessoDb.dtos.PiezometroAtivoDTO(p.cdPiezometro, p.idPiezometro, p.nmPiezometro, p.fgSituacao, p.tpPiezometro) FROM Piezometro p WHERE p.fgSituacao = 'A'")
+    @Query("SELECT new com.rioDesertoAcessoDb.dtos.PiezometroAtivoDTO(p.cdPiezometro, p.idPiezometro, p.nmPiezometro, p.fgSituacao, p.tpPiezometro) FROM Piezometro p WHERE p.fgSituacao = 'A' AND p.cdEmpresa = 18")
     List<PiezometroAtivoDTO> findAtivosSimplificadoDTO();
 
-    @Query("SELECT new com.rioDesertoAcessoDb.dtos.PiezometroAtivoDTO(p.cdPiezometro, p.idPiezometro, p.nmPiezometro, p.fgSituacao, p.tpPiezometro) FROM Piezometro p WHERE p.fgSituacao = 'A' AND p.tpPiezometro IN :tipos")
+    @Query("SELECT new com.rioDesertoAcessoDb.dtos.PiezometroAtivoDTO(p.cdPiezometro, p.idPiezometro, p.nmPiezometro, p.fgSituacao, p.tpPiezometro) FROM Piezometro p WHERE p.fgSituacao = 'A' AND p.cdEmpresa = 18 AND p.tpPiezometro IN :tipos")
     List<PiezometroAtivoDTO> findAtivosPorTiposSimplificadoDTO(@Param("tipos") List<String> tipos);
 }
