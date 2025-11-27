@@ -5,12 +5,15 @@ public class PiezometroAtivoDTO {
     private String idPiezometro;
     private String nomePiezometro;
     private String situacaoPiezometro;
+    private String tipoPiezometro;
 
-    public PiezometroAtivoDTO(Integer cdPiezometro, String idPiezometro, String nomePiezometro, String situacaoPiezometro) {
+
+    public PiezometroAtivoDTO(Integer cdPiezometro, String idPiezometro, String nomePiezometro, String situacaoPiezometro, String tipoPiezometro) {
         this.cdPiezometro = cdPiezometro;
         this.idPiezometro = idPiezometro;
         this.nomePiezometro = nomePiezometro;
         this.situacaoPiezometro = situacaoPiezometro;
+        this.tipoPiezometro = tipoPiezometro;
     }
 
     public Integer getCdPiezometro() {
@@ -43,5 +46,13 @@ public class PiezometroAtivoDTO {
 
     public void setSituacaoPiezometro(String situacaoPiezometro) {
         this.situacaoPiezometro = situacaoPiezometro;
+    }
+
+    public String getTipoPiezometro() {
+        return tipoPiezometro;
+    }
+
+    public void setTipoPiezometro(String tipoPiezometro) {
+        this.tipoPiezometro = tipoPiezometro;
     }
 }

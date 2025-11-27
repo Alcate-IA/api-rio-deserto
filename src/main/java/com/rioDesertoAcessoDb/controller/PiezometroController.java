@@ -21,7 +21,13 @@ public class PiezometroController {
     }
 
     @GetMapping("/ativos")
-    public List<PiezometroAtivoDTO> getPiezometrosAtivosComDTO() {
-        return piezometroRepository.findAtivosSimplificadoDTO();
+    public List<PiezometroAtivoDTO> getPiezometrosAtivosComDTO(
+            @RequestParam(required = false) List<String> tipos) {
+
+        if (tipos != null && !tipos.isEmpty()) {
+            return piezometroRepository.findAtivosPorTiposSimplificadoDTO(tipos);
+        } else {
+            return piezometroRepository.findAtivosSimplificadoDTO();
+        }
     }
 }
