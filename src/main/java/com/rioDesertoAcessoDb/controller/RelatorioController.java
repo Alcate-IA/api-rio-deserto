@@ -228,6 +228,8 @@ public class RelatorioController {
         return jdbcTemplate.queryForList(sql, cdPiezometro, cdPiezometro);
     }
 
+    //http://localhost:8080/relatorios/piezometro/5/filtro?mesAnoInicio=01/2024&mesAnoFim=12/2024
+    //modleo para testar rápido
     @GetMapping("/piezometro/{cdPiezometro}/filtro")
     public List<Map<String, Object>> getDadosPiezometroComFiltro(
             @PathVariable Integer cdPiezometro,
@@ -280,7 +282,7 @@ public class RelatorioController {
                 WHERE cd_piezometro = ?
                 LIMIT 1
             ) ip
-            ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) DESC
+            ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
             """;
 
         return jdbcTemplate.queryForList(sql,
