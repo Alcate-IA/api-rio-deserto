@@ -298,14 +298,14 @@ public class RelatorioController {
             ) v ON p.mes_ano = v.mes_ano
         FULL JOIN 
             (SELECT 
-                DATE_TRUNC('month', ipm.dt_inclusao)::date AS mes_ano,
+                DATE_TRUNC('month', ipm.dt_inspecao)::date AS mes_ano,
                 AVG(ipm.qt_nivel_estatico) AS media_nivel_estatico
              FROM tb_inspecao_piezometro_mvto ipm
              INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
              WHERE ip.cd_piezometro = ?
-               AND ipm.dt_inclusao >= TO_DATE(?, 'DD/MM/YYYY') 
-               AND ipm.dt_inclusao <= TO_DATE(?, 'DD/MM/YYYY')
-             GROUP BY DATE_TRUNC('month', ipm.dt_inclusao)
+               AND ipm.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY')
+               AND ipm.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY')
+             GROUP BY DATE_TRUNC('month', ipm.dt_inspecao)
             ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
         CROSS JOIN (
             SELECT qt_cota_superficie, qt_cota_base 
