@@ -211,50 +211,50 @@ public class RelatorioController {
         String dataFim = "01/" + mesAnoFim;
 
         String sql = """
-        SELECT 
-            na.vl_cota AS cota_superficie,
-            NULL AS cota_base,  -- PR não tem cota_base, então retorna NULL
-            COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
-            p.precipitacao_total AS precipitacao,
-            v.vazao_bombeamento AS vazao_bombeamento,
-            n.media_nivel_estatico AS nivel_estatico
-        FROM 
-            (SELECT 
-                DATE_TRUNC('month', dt_item)::date AS mes_ano,
-                SUM(vl_precipitacao) AS precipitacao_total
-             FROM tb_meteorologia_item
-             WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
-               AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
-               AND cd_meteorologia = 12
-             GROUP BY DATE_TRUNC('month', dt_item)
-            ) p
-        FULL JOIN 
-            (SELECT 
-                mes_ano_vazao AS mes_ano,
-                vazao_bombeamento
-             FROM tb_vazao_mina
-             WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
-               AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
-            ) v ON p.mes_ano = v.mes_ano
-        FULL JOIN 
-            (SELECT 
-                DATE_TRUNC('month', nai.dt_inclusao)::date AS mes_ano,
-                AVG(nai.qt_nivel_estatico) AS media_nivel_estatico
-             FROM tb_nivel_agua_item nai
-             INNER JOIN tb_nivel_agua na ON nai.cd_nivel_agua = na.cd_nivel_agua
-             WHERE na.cd_piezometro = ?
-               AND nai.dt_inclusao >= TO_DATE(?, 'DD/MM/YYYY') 
-               AND nai.dt_inclusao <= TO_DATE(?, 'DD/MM/YYYY')
-             GROUP BY DATE_TRUNC('month', nai.dt_inclusao)
-            ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
-        CROSS JOIN (
-            SELECT vl_cota 
-            FROM tb_nivel_agua 
-            WHERE cd_piezometro = ?
-            LIMIT 1
-        ) na
-        ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
-        """;
+    SELECT 
+        na.vl_cota AS cota_superficie,
+        NULL AS cota_base,  -- PR não tem cota_base, então retorna NULL
+        COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
+        p.precipitacao_total AS precipitacao,
+        v.vazao_bombeamento AS vazao_bombeamento,
+        n.media_nivel_estatico AS nivel_estatico
+    FROM 
+        (SELECT 
+            DATE_TRUNC('month', dt_item)::date AS mes_ano,
+            SUM(vl_precipitacao) AS precipitacao_total 
+         FROM tb_meteorologia_item
+         WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
+           AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
+           AND cd_meteorologia = 12
+         GROUP BY DATE_TRUNC('month', dt_item)
+        ) p
+    FULL JOIN 
+        (SELECT 
+            mes_ano_vazao AS mes_ano,
+            vazao_bombeamento
+         FROM tb_vazao_mina
+         WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
+           AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
+        ) v ON p.mes_ano = v.mes_ano
+    FULL JOIN 
+        (SELECT 
+            DATE_TRUNC('month', nai.dt_inspecao)::date AS mes_ano,  -- 1. CORRIGIDO: Usando dt_inspecao
+            AVG(nai.qt_nivel_estatico) AS media_nivel_estatico
+         FROM tb_nivel_agua_item nai
+         INNER JOIN tb_nivel_agua na ON nai.cd_nivel_agua = na.cd_nivel_agua
+         WHERE na.cd_piezometro = ?
+           AND nai.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY') -- 2. CORRIGIDO: Filtro por dt_inspecao
+           AND nai.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY') -- 3. CORRIGIDO: Filtro por dt_inspecao
+         GROUP BY DATE_TRUNC('month', nai.dt_inspecao) -- 4. CORRIGIDO: Agrupando por dt_inspecao
+        ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
+    CROSS JOIN (
+        SELECT vl_cota 
+        FROM tb_nivel_agua 
+        WHERE cd_piezometro = ?
+        LIMIT 1
+    ) na
+    ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
+    """;
 
         return jdbcTemplate.queryForList(sql,
                 dataInicio, dataFim,
