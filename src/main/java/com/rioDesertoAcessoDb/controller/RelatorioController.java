@@ -200,8 +200,12 @@ public class RelatorioController {
 
         if ("PR".equals(tipoPiezometro)) {
             return getDadosReguaComFiltro(cdPiezometro, mesAnoInicio, mesAnoFim);
-        } else {
+        } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
+            return getDadosRecursosHidricosComFiltro(cdPiezometro, mesAnoInicio, mesAnoFim);
+        } else if ("PP".equals(tipoPiezometro)) {
             return getDadosPiezometroComumComFiltro(cdPiezometro, mesAnoInicio, mesAnoFim);
+        } else {
+            throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
         }
     }
 
@@ -265,7 +269,61 @@ public class RelatorioController {
         );
     }
 
-    // PB, PP, PV, PC (
+    // PC (Calhas) e PV (Ponto de Vazão)
+    private List<Map<String, Object>> getDadosRecursosHidricosComFiltro(Integer cdPiezometro, String mesAnoInicio, String mesAnoFim) {
+        String dataInicio = "01/" + mesAnoInicio;
+        String dataFim = "01/" + mesAnoFim;
+
+        String sql = """
+        SELECT 
+            NULL AS cota_superficie,
+            NULL AS cota_base,
+            COALESCE(p.mes_ano, v.mes_ano, rh.mes_ano) AS mes_ano,
+            p.precipitacao_total AS precipitacao,
+            v.vazao_bombeamento AS vazao_bombeamento,
+            rh.vazao_calha AS vazao_calha,
+            NULL AS nivel_estatico
+        FROM 
+            (SELECT 
+                DATE_TRUNC('month', dt_item)::date AS mes_ano,
+                SUM(vl_precipitacao) AS precipitacao_total
+             FROM tb_meteorologia_item
+             WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND dt_item <= TO_DATE(?, 'DD/MM/YYYY') 
+               AND cd_meteorologia = 12
+             GROUP BY DATE_TRUNC('month', dt_item)
+            ) p
+        FULL JOIN 
+            (SELECT 
+                mes_ano_vazao AS mes_ano,
+                vazao_bombeamento
+             FROM tb_vazao_mina
+             WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
+            ) v ON p.mes_ano = v.mes_ano
+        FULL JOIN 
+            (SELECT 
+                DATE_TRUNC('month', rhi.dt_inspecao)::date AS mes_ano,
+                AVG(rhi.qt_leitura) AS vazao_calha
+             FROM tb_recursos_hidricos_item rhi
+             INNER JOIN tb_recursos_hidricos rh ON rhi.cd_recursos_hidricos = rh.cd_recursos_hidricos
+             WHERE rh.cd_piezometro = ?
+               AND rhi.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY')
+               AND rhi.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY')
+             GROUP BY DATE_TRUNC('month', rhi.dt_inspecao)
+            ) rh ON COALESCE(p.mes_ano, v.mes_ano) = rh.mes_ano
+        ORDER BY COALESCE(p.mes_ano, v.mes_ano, rh.mes_ano) ASC
+        """;
+
+        return jdbcTemplate.queryForList(sql,
+                dataInicio, dataFim,
+                dataInicio, dataFim,
+                cdPiezometro,
+                dataInicio, dataFim
+        );
+    }
+
+    // PP (Piezômetro de Profundidade)
     private List<Map<String, Object>> getDadosPiezometroComumComFiltro(Integer cdPiezometro, String mesAnoInicio, String mesAnoFim) {
         String dataInicio = "01/" + mesAnoInicio;
         String dataFim = "01/" + mesAnoFim;
@@ -277,7 +335,8 @@ public class RelatorioController {
             COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
             p.precipitacao_total AS precipitacao,
             v.vazao_bombeamento AS vazao_bombeamento,
-            n.media_nivel_estatico AS nivel_estatico
+            n.media_nivel_estatico AS nivel_estatico,
+            NULL AS vazao_calha
         FROM 
             (SELECT 
                 DATE_TRUNC('month', dt_item)::date AS mes_ano,
