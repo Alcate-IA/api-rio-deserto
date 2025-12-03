@@ -217,50 +217,50 @@ public class RelatorioController {
         String dataFim = "01/" + mesAnoFim;
 
         String sql = """
-    SELECT 
-        na.vl_cota AS cota_superficie,
-        NULL AS cota_base,  -- PR não tem cota_base, então retorna NULL
-        COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
-        p.precipitacao_total AS precipitacao,
-        v.vazao_bombeamento AS vazao_bombeamento,
-        n.media_nivel_estatico AS nivel_estatico
-    FROM 
-        (SELECT 
-            DATE_TRUNC('month', dt_item)::date AS mes_ano,
-            SUM(vl_precipitacao) AS precipitacao_total 
-         FROM tb_meteorologia_item
-         WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
-           AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
-           AND cd_meteorologia = 12
-         GROUP BY DATE_TRUNC('month', dt_item)
-        ) p
-    FULL JOIN 
-        (SELECT 
-            mes_ano_vazao AS mes_ano,
-            vazao_bombeamento
-         FROM tb_vazao_mina
-         WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
-           AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
-        ) v ON p.mes_ano = v.mes_ano
-    FULL JOIN 
-        (SELECT 
-            DATE_TRUNC('month', nai.dt_inspecao)::date AS mes_ano,  -- 1. CORRIGIDO: Usando dt_inspecao
-            AVG(nai.qt_nivel_estatico) AS media_nivel_estatico
-         FROM tb_nivel_agua_item nai
-         INNER JOIN tb_nivel_agua na ON nai.cd_nivel_agua = na.cd_nivel_agua
-         WHERE na.cd_piezometro = ?
-           AND nai.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY') -- 2. CORRIGIDO: Filtro por dt_inspecao
-           AND nai.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY') -- 3. CORRIGIDO: Filtro por dt_inspecao
-         GROUP BY DATE_TRUNC('month', nai.dt_inspecao) -- 4. CORRIGIDO: Agrupando por dt_inspecao
-        ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
-    CROSS JOIN (
-        SELECT vl_cota 
-        FROM tb_nivel_agua 
-        WHERE cd_piezometro = ?
-        LIMIT 1
-    ) na
-    ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
-    """;
+        SELECT 
+            na.vl_cota AS cota_superficie,
+            NULL AS cota_base,  -- PR não tem cota_base, então retorna NULL
+            COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
+            p.precipitacao_total AS precipitacao,
+            v.vazao_bombeamento AS vazao_bombeamento,
+            n.media_nivel_estatico AS nivel_estatico
+        FROM 
+            (SELECT 
+                DATE_TRUNC('month', dt_item)::date AS mes_ano,
+                SUM(vl_precipitacao) AS precipitacao_total 
+             FROM tb_meteorologia_item
+             WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
+               AND cd_meteorologia = 12
+             GROUP BY DATE_TRUNC('month', dt_item)
+            ) p
+        FULL JOIN 
+            (SELECT 
+                mes_ano_vazao AS mes_ano,
+                vazao_bombeamento
+             FROM tb_vazao_mina
+             WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY') 
+               AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
+            ) v ON p.mes_ano = v.mes_ano
+        FULL JOIN 
+            (SELECT 
+                DATE_TRUNC('month', nai.dt_inspecao)::date AS mes_ano,  -- 1. CORRIGIDO: Usando dt_inspecao
+                AVG(nai.qt_nivel_estatico) AS media_nivel_estatico
+             FROM tb_nivel_agua_item nai
+             INNER JOIN tb_nivel_agua na ON nai.cd_nivel_agua = na.cd_nivel_agua
+             WHERE na.cd_piezometro = ?
+               AND nai.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY') -- 2. CORRIGIDO: Filtro por dt_inspecao
+               AND nai.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY') -- 3. CORRIGIDO: Filtro por dt_inspecao
+             GROUP BY DATE_TRUNC('month', nai.dt_inspecao) -- 4. CORRIGIDO: Agrupando por dt_inspecao
+            ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
+        CROSS JOIN (
+            SELECT vl_cota 
+            FROM tb_nivel_agua 
+            WHERE cd_piezometro = ?
+            LIMIT 1
+        ) na
+        ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
+        """;
 
         return jdbcTemplate.queryForList(sql,
                 dataInicio, dataFim,
@@ -445,50 +445,46 @@ public class RelatorioController {
         return jdbcTemplate.queryForList(sql, idZeus, dataInicio, dataFim);
     }
 
-    private static final Map<String, String> MAPEAMENTO_ABREVIATURAS = Map.ofEntries(
-            Map.entry("pH", "pH"),
-            Map.entry("pH.", "pH"),
-            Map.entry("Ac", "acidez"),
-            Map.entry("S.D.", "solidosDissolvidos"),
-            Map.entry("R.S.", "residuosSedimentaveis"),
-            Map.entry("S.T.", "solidosTotais"),
-            Map.entry("SO4", "sulfato"),
-            Map.entry("Cond", "condutividade"),
-            Map.entry("Fe T", "ferroTotal"),
-            Map.entry("Fe Dis.", "ferroDissolvido"),
-            Map.entry("Mn", "manganes"),
-            Map.entry("Zn", "zinco"),
-            Map.entry("Cu Dis.", "cobreDissolvido"),
-            Map.entry("Al Dis.", "aluminioDissolvido")
-    );
+        private static final Map<String, String> MAPEAMENTO_ABREVIATURAS = Map.ofEntries(
+                Map.entry("pH", "pH"),
+                Map.entry("pH.", "pH"),
+                Map.entry("SO4", "sulfato"),
+                Map.entry("Fe T", "ferroTotal"),
+                Map.entry("Mn", "manganesTotal"),
+                Map.entry("Dz T", "durezaTotal"),
+                Map.entry("Col T", "coliformesTotais"),
+                Map.entry("Tb", "turbidez"),
+                Map.entry("Cor", "cor")
+        );
 
-    @GetMapping("coleta/analises-quimicas/{nRegistro}")
-    public Map<String, Object> getAnalisesQuimicasSimplificadas(@PathVariable Long nRegistro) {
+        @GetMapping("coleta/analises-quimicas/{nRegistro}")
+        public Map<String, Object> getAnalisesQuimicasSimplificadas(@PathVariable Long nRegistro) {
+            String sql = "SELECT simbolo, resultado FROM amostraanalise_quimico WHERE N_REGISTRO = ? ORDER BY simbolo";
+            List<Map<String, Object>> dadosBrutos = jdbcTemplate.queryForList(sql, nRegistro);
 
-        String sql = "SELECT simbolo, resultado FROM amostraanalise_quimico WHERE N_REGISTRO = ? ORDER BY simbolo";
-        List<Map<String, Object>> dadosBrutos = jdbcTemplate.queryForList(sql, nRegistro);
+            Map<String, String> analisesMap = new LinkedHashMap<>();
+            for (Map<String, Object> linha : dadosBrutos) {
+                String simbolo = (String) linha.get("simbolo");
+                String resultado = (String) linha.get("resultado");
 
-        Map<String, String> analisesMap = new LinkedHashMap<>();
-        for (Map<String, Object> linha : dadosBrutos) {
-            String simbolo = (String) linha.get("simbolo");
-            String resultado = (String) linha.get("resultado");
-
-            String nomeCamelCase = MAPEAMENTO_ABREVIATURAS.getOrDefault(simbolo, simbolo);
-            analisesMap.put(nomeCamelCase, resultado);
-        }
+                if (MAPEAMENTO_ABREVIATURAS.containsKey(simbolo)) {
+                    String nomeCamelCase = MAPEAMENTO_ABREVIATURAS.get(simbolo);
+                    analisesMap.put(nomeCamelCase, resultado);
+                }
+            }
 
         String sqlAmostra = """
-        SELECT 
-            aq.data,
-            aq.identificacao,
-            aq.coletor,
-            aq.tipoamostra,
-            ide.identificacao as nome_identificacao,
-            ide.id_zeus
-        FROM amostra_quimico aq
-        LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
-        WHERE aq.N_REGISTRO = ?
-        """;
+            SELECT 
+                aq.data,
+                aq.identificacao,
+                aq.coletor,
+                aq.tipoamostra,
+                ide.identificacao as nome_identificacao,
+                ide.id_zeus
+            FROM amostra_quimico aq
+            LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+            WHERE aq.N_REGISTRO = ?
+            """;
 
         Map<String, Object> infoAmostra;
         try {
