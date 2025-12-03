@@ -412,4 +412,34 @@ public class RelatorioController {
             this.mesAnoFim = mesAnoFim;
         }
     }
+
+    // http://localhost:8080/relatorios/206/filtro?mesAnoInicio=01/2010&mesAnoFim=12/2023
+    @GetMapping("/{idZeus}/filtro")
+    public List<Map<String, Object>> getRelatorioPorZeus(
+            @PathVariable Integer idZeus,
+            @RequestParam String mesAnoInicio,
+            @RequestParam String mesAnoFim) {
+
+        String dataInicio = "01/" + mesAnoInicio;
+        String dataFim = "01/" + mesAnoFim;
+
+        String sql = """
+            SELECT 
+                aq.N_REGISTRO, 
+                aq.DATA, 
+                ide.id_zeus,
+                ide.identificacao,
+                COUNT(*) as total_registros
+            FROM amostra_quimico aq
+            INNER JOIN identificacao ide ON (aq.identificacao = ide.codigo)
+            LEFT JOIN amostraanalise_quimico aaq ON (aq.n_registro = aaq.n_registro) 
+            WHERE ide.ID_ZEUS = ?
+              AND aq.DATA >= TO_DATE(?, 'DD/MM/YYYY') 
+              AND aq.DATA <= TO_DATE(?, 'DD/MM/YYYY')
+            GROUP BY aq.N_REGISTRO, aq.DATA, ide.id_zeus, ide.identificacao
+            ORDER BY aq.N_REGISTRO
+            """;
+
+        return jdbcTemplate.queryForList(sql, idZeus, dataInicio, dataFim);
+    }
 }
