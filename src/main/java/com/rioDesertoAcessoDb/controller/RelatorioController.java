@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -413,8 +415,8 @@ public class RelatorioController {
         }
     }
 
-    // http://localhost:8080/relatorios/206/filtro?mesAnoInicio=01/2010&mesAnoFim=12/2023
-    @GetMapping("/{idZeus}/filtro")
+    //http://localhost:8080/relatorios/coleta/206/filtro?mesAnoInicio=01/2010&mesAnoFim=12/2023
+    @GetMapping("coleta/{idZeus}/filtro")
     public List<Map<String, Object>> getRelatorioPorZeus(
             @PathVariable Integer idZeus,
             @RequestParam String mesAnoInicio,
@@ -441,5 +443,94 @@ public class RelatorioController {
             """;
 
         return jdbcTemplate.queryForList(sql, idZeus, dataInicio, dataFim);
+    }
+
+    private static final Map<String, String> MAPEAMENTO_ABREVIATURAS = Map.ofEntries(
+            Map.entry("pH", "pH"),
+            Map.entry("pH.", "pH"),
+            Map.entry("Ac", "acidez"),
+            Map.entry("S.D.", "solidosDissolvidos"),
+            Map.entry("R.S.", "residuosSedimentaveis"),
+            Map.entry("S.T.", "solidosTotais"),
+            Map.entry("SO4", "sulfato"),
+            Map.entry("Cond", "condutividade"),
+            Map.entry("Fe T", "ferroTotal"),
+            Map.entry("Fe Dis.", "ferroDissolvido"),
+            Map.entry("Mn", "manganes"),
+            Map.entry("Zn", "zinco"),
+            Map.entry("Cu Dis.", "cobreDissolvido"),
+            Map.entry("Al Dis.", "aluminioDissolvido")
+    );
+
+    @GetMapping("coleta/analises-quimicas/{nRegistro}")
+    public Map<String, Object> getAnalisesQuimicasSimplificadas(@PathVariable Long nRegistro) {
+
+        String sql = "SELECT simbolo, resultado FROM amostraanalise_quimico WHERE N_REGISTRO = ? ORDER BY simbolo";
+        List<Map<String, Object>> dadosBrutos = jdbcTemplate.queryForList(sql, nRegistro);
+
+        Map<String, String> analisesMap = new LinkedHashMap<>();
+        for (Map<String, Object> linha : dadosBrutos) {
+            String simbolo = (String) linha.get("simbolo");
+            String resultado = (String) linha.get("resultado");
+
+            String nomeCamelCase = MAPEAMENTO_ABREVIATURAS.getOrDefault(simbolo, simbolo);
+            analisesMap.put(nomeCamelCase, resultado);
+        }
+
+        String sqlAmostra = """
+        SELECT 
+            aq.data,
+            aq.identificacao,
+            aq.coletor,
+            aq.tipoamostra,
+            ide.identificacao as nome_identificacao,
+            ide.id_zeus
+        FROM amostra_quimico aq
+        LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+        WHERE aq.N_REGISTRO = ?
+        """;
+
+        Map<String, Object> infoAmostra;
+        try {
+            infoAmostra = jdbcTemplate.queryForMap(sqlAmostra, nRegistro);
+
+            Map<String, Object> infoCamelCase = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : infoAmostra.entrySet()) {
+                String keyCamelCase = toCamelCase(entry.getKey());
+                infoCamelCase.put(keyCamelCase, entry.getValue());
+            }
+            infoAmostra = infoCamelCase;
+
+        } catch (Exception e) {
+            infoAmostra = new HashMap<>();
+            infoAmostra.put("erro", "Informacoes da amostra nao encontradas");
+        }
+
+        Map<String, Object> resposta = new LinkedHashMap<>();
+        resposta.put("nRegistro", nRegistro);
+        resposta.put("informacoesAmostra", infoAmostra);
+        resposta.put("totalParametros", analisesMap.size());
+        resposta.put("analises", analisesMap);
+
+        return resposta;
+    }
+
+    private String toCamelCase(String snakeCase) {
+        if (snakeCase == null || snakeCase.isEmpty()) {
+            return snakeCase;
+        }
+
+        String[] parts = snakeCase.split("_");
+        StringBuilder camelCase = new StringBuilder(parts[0].toLowerCase());
+
+        for (int i = 1; i < parts.length; i++) {
+            String part = parts[i];
+            if (!part.isEmpty()) {
+                camelCase.append(Character.toUpperCase(part.charAt(0)))
+                        .append(part.substring(1).toLowerCase());
+            }
+        }
+
+        return camelCase.toString();
     }
 }
