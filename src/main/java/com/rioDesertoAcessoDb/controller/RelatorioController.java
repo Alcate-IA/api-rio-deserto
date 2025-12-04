@@ -461,6 +461,8 @@ public class RelatorioController {
             List<Map<String, Object>> dadosBrutos = jdbcTemplate.queryForList(sql, nRegistro);
 
             Map<String, String> analisesMap = new LinkedHashMap<>();
+            Map<String, String> outrosDadosMap = new LinkedHashMap<>();
+
             for (Map<String, Object> linha : dadosBrutos) {
                 String simbolo = (String) linha.get("simbolo");
                 String resultado = (String) linha.get("resultado");
@@ -468,46 +470,50 @@ public class RelatorioController {
                 if (MAPEAMENTO_ABREVIATURAS.containsKey(simbolo)) {
                     String nomeCamelCase = MAPEAMENTO_ABREVIATURAS.get(simbolo);
                     analisesMap.put(nomeCamelCase, resultado);
+                } else {
+                    outrosDadosMap.put(simbolo, resultado);
                 }
             }
 
-        String sqlAmostra = """
-            SELECT 
-                aq.data,
-                aq.identificacao,
-                aq.coletor,
-                aq.tipoamostra,
-                ide.identificacao as nome_identificacao,
-                ide.id_zeus
-            FROM amostra_quimico aq
-            LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
-            WHERE aq.N_REGISTRO = ?
-            """;
+            String sqlAmostra = """
+        SELECT 
+            aq.data,
+            aq.identificacao,
+            aq.coletor,
+            aq.tipoamostra,
+            ide.identificacao as nome_identificacao,
+            ide.id_zeus
+        FROM amostra_quimico aq
+        LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+        WHERE aq.N_REGISTRO = ?
+        """;
 
-        Map<String, Object> infoAmostra;
-        try {
-            infoAmostra = jdbcTemplate.queryForMap(sqlAmostra, nRegistro);
+            Map<String, Object> infoAmostra;
+            try {
+                infoAmostra = jdbcTemplate.queryForMap(sqlAmostra, nRegistro);
 
-            Map<String, Object> infoCamelCase = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : infoAmostra.entrySet()) {
-                String keyCamelCase = toCamelCase(entry.getKey());
-                infoCamelCase.put(keyCamelCase, entry.getValue());
+                Map<String, Object> infoCamelCase = new LinkedHashMap<>();
+                for (Map.Entry<String, Object> entry : infoAmostra.entrySet()) {
+                    String keyCamelCase = toCamelCase(entry.getKey());
+                    infoCamelCase.put(keyCamelCase, entry.getValue());
+                }
+                infoAmostra = infoCamelCase;
+
+            } catch (Exception e) {
+                infoAmostra = new HashMap<>();
+                infoAmostra.put("erro", "Informacoes da amostra nao encontradas");
             }
-            infoAmostra = infoCamelCase;
 
-        } catch (Exception e) {
-            infoAmostra = new HashMap<>();
-            infoAmostra.put("erro", "Informacoes da amostra nao encontradas");
+            Map<String, Object> resposta = new LinkedHashMap<>();
+            resposta.put("nRegistro", nRegistro);
+            resposta.put("informacoesAmostra", infoAmostra);
+            resposta.put("totalParametrosMapeados", analisesMap.size());
+            resposta.put("totalOutrosDados", outrosDadosMap.size());
+            resposta.put("analises", analisesMap);
+            resposta.put("outrosDados", outrosDadosMap);
+
+            return resposta;
         }
-
-        Map<String, Object> resposta = new LinkedHashMap<>();
-        resposta.put("nRegistro", nRegistro);
-        resposta.put("informacoesAmostra", infoAmostra);
-        resposta.put("totalParametros", analisesMap.size());
-        resposta.put("analises", analisesMap);
-
-        return resposta;
-    }
 
     private String toCamelCase(String snakeCase) {
         if (snakeCase == null || snakeCase.isEmpty()) {
