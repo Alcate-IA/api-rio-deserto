@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/relatorios")
@@ -453,6 +450,7 @@ public class RelatorioController {
                 Map.entry("Mn", "manganesTotal"),
                 Map.entry("Dz T", "durezaTotal"),
                 Map.entry("Col T", "coliformesTotais"),
+                Map.entry("Colf F", "escherichiaColi"),
                 Map.entry("Tb", "turbidez"),
                 Map.entry("Cor", "cor")
         );
