@@ -476,17 +476,17 @@ public class RelatorioController {
             }
 
             String sqlAmostra = """
-        SELECT 
-            aq.data,
-            aq.identificacao,
-            aq.coletor,
-            aq.tipoamostra,
-            ide.identificacao as nome_identificacao,
-            ide.id_zeus
-        FROM amostra_quimico aq
-        LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
-        WHERE aq.N_REGISTRO = ?
-        """;
+            SELECT 
+                aq.data,
+                aq.identificacao,
+                aq.coletor,
+                aq.tipoamostra,
+                ide.identificacao as nome_identificacao,
+                ide.id_zeus
+            FROM amostra_quimico aq
+            LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+            WHERE aq.N_REGISTRO = ?
+            """;
 
             Map<String, Object> infoAmostra;
             try {
@@ -515,22 +515,42 @@ public class RelatorioController {
             return resposta;
         }
 
-    private String toCamelCase(String snakeCase) {
-        if (snakeCase == null || snakeCase.isEmpty()) {
-            return snakeCase;
-        }
-
-        String[] parts = snakeCase.split("_");
-        StringBuilder camelCase = new StringBuilder(parts[0].toLowerCase());
-
-        for (int i = 1; i < parts.length; i++) {
-            String part = parts[i];
-            if (!part.isEmpty()) {
-                camelCase.append(Character.toUpperCase(part.charAt(0)))
-                        .append(part.substring(1).toLowerCase());
+        private String toCamelCase(String snakeCase) {
+            if (snakeCase == null || snakeCase.isEmpty()) {
+                return snakeCase;
             }
+
+            String[] parts = snakeCase.split("_");
+            StringBuilder camelCase = new StringBuilder(parts[0].toLowerCase());
+
+            for (int i = 1; i < parts.length; i++) {
+                String part = parts[i];
+                if (!part.isEmpty()) {
+                    camelCase.append(Character.toUpperCase(part.charAt(0)))
+                            .append(part.substring(1).toLowerCase());
+                }
+            }
+
+            return camelCase.toString();
         }
 
-        return camelCase.toString();
-    }
+        //http://localhost:8080/relatorios/piezometros-ativos
+        //criei essa api pq ela tá trazendo somente trazer os dados que também existem no zeus
+        //não sei se isso tá correto na verdade
+        @GetMapping("/piezometros-ativos")
+        public List<Map<String, Object>> getPiezometrosAtivos() {
+            String sql = """
+                SELECT 
+                    i.id_zeus,
+                    p.nm_piezometro,
+                    p.cd_piezometro,
+                    p.id_piezometro
+                FROM identificacao i
+                JOIN tb_piezometro p
+                    ON p.cd_piezometro = i.id_zeus
+                WHERE p.fg_situacao = 'A' AND p.cd_empresa = 18
+                """;
+
+            return jdbcTemplate.queryForList(sql);
+        }
 }
