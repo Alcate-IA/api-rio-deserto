@@ -553,4 +553,78 @@ public class RelatorioController {
 
             return jdbcTemplate.queryForList(sql);
         }
+
+    @GetMapping("coleta-completa/{idZeus}/filtro")
+    public Map<String, Object> getRelatorioCompletoPorZeus(
+            @PathVariable Integer idZeus,
+            @RequestParam String mesAnoInicio,
+            @RequestParam String mesAnoFim) {
+
+        String dataInicio = "01/" + mesAnoInicio;
+        String dataFim = "01/" + mesAnoFim;
+
+        String sqlAmostras = """
+            SELECT 
+                aq.N_REGISTRO, 
+                aq.DATA, 
+                ide.id_zeus,
+                ide.identificacao
+            FROM amostra_quimico aq
+            INNER JOIN identificacao ide ON (aq.identificacao = ide.codigo)
+            WHERE ide.ID_ZEUS = ?
+              AND aq.DATA >= TO_DATE(?, 'DD/MM/YYYY') 
+              AND aq.DATA <= TO_DATE(?, 'DD/MM/YYYY')
+            ORDER BY aq.N_REGISTRO
+            """;
+
+        List<Map<String, Object>> amostras = jdbcTemplate.queryForList(sqlAmostras, idZeus, dataInicio, dataFim);
+
+        List<Map<String, Object>> resultadoCompleto = new ArrayList<>();
+
+        for (Map<String, Object> amostra : amostras) {
+            Long nRegistro = ((Number) amostra.get("N_REGISTRO")).longValue();
+
+            String sqlInfoAmostra = """
+                SELECT 
+                    aq.data,
+                    aq.identificacao,
+                    aq.coletor,
+                    aq.tipoamostra,
+                    ide.identificacao as nome_identificacao,
+                    ide.id_zeus
+                FROM amostra_quimico aq
+                LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+                WHERE aq.N_REGISTRO = ?
+                """;
+
+            Map<String, Object> infoAmostra = Collections.emptyMap();
+            try {
+                infoAmostra = jdbcTemplate.queryForMap(sqlInfoAmostra, nRegistro);
+            } catch (Exception e) {
+                infoAmostra = new HashMap<>();
+                infoAmostra.put("erro", "Informações não encontradas");
+            }
+
+            String sqlAnalises = "SELECT simbolo, resultado FROM amostraanalise_quimico WHERE N_REGISTRO = ? ORDER BY simbolo";
+            List<Map<String, Object>> analises = jdbcTemplate.queryForList(sqlAnalises, nRegistro);
+
+            Map<String, Object> resultadoAmostra = new LinkedHashMap<>();
+            resultadoAmostra.put("nRegistro", nRegistro);
+            resultadoAmostra.put("informacoesAmostra", infoAmostra);
+            resultadoAmostra.put("analises", analises);
+            resultadoAmostra.put("totalAnalises", analises.size());
+
+            resultadoCompleto.add(resultadoAmostra);
+        }
+
+        Map<String, Object> respostaFinal = new LinkedHashMap<>();
+        respostaFinal.put("idZeus", idZeus);
+        respostaFinal.put("periodoInicio", dataInicio);
+        respostaFinal.put("periodoFim", dataFim);
+        respostaFinal.put("totalAmostras", resultadoCompleto.size());
+        respostaFinal.put("amostras", resultadoCompleto);
+
+        return respostaFinal;
+    }
+
 }
