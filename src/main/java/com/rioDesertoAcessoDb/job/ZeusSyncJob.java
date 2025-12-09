@@ -30,19 +30,6 @@ public class ZeusSyncJob {
             "TB_RECURSOS_HIDRICOS_ITEM",
             "TB_INSPECAO_PIEZOMETRO_FREQ",
             "TB_INSPECAO_PIEZOMETRO_MVTO"
-            //"TB_VAZAO_MINA"         //MANTER COMENTADA NÃO EXISTE NO FIREBIRD
-    );
-
-    private static final List<String> TABELAS_PRINCIPAIS = Arrays.asList(
-            "TB_METEOROLOGIA_ITEM",
-            "TB_NIVEL_AGUA_ITEM",
-            "TB_NIVEL_AGUA",
-            //"TB_VAZAO_MINA", //MANTER COMENTADA NÃO EXISTE NO FIREBIRD
-            "TB_RECURSOS_HIDRICOS_ITEM",
-            "TB_RECURSOS_HIDRICOS",
-            "TB_PIEZOMETRO",
-            "TB_INSPECAO_PIEZOMETRO",
-            "TB_INSPECAO_PIEZOMETRO_MVTO"
     );
 
     @Scheduled(fixedDelay = 60000, initialDelay = 5000)
@@ -69,7 +56,7 @@ public class ZeusSyncJob {
         System.out.println("2. Testando Firebird...");
         long inicioFirebird = System.currentTimeMillis();
         try (Connection fbConn = DriverManager.getConnection(
-                "jdbc:firebirdsql://192.9.200.7:3050//data1/dataib/zeus20.fdb",
+                "jdbc:firebirdsql://192.9.200.7:3050//data1/dataib/zeus20.fdb?encoding=WIN1252",  // ← ADICIONADO
                 "ALCATEIA",
                 "8D5Z9s2F")) {
 
@@ -200,7 +187,8 @@ public class ZeusSyncJob {
                 int registrosInseridos = inserirNoPostgres(tabelaPostgres, colunasPostgres, dadosFirebird);
                 long fimInsercao = System.currentTimeMillis();
 
-                // 6. Re-habilitar FKs se necessário
+
+                // 7. Re-habilitar FKs se necessário
                 if (isTabelaPai(tabelaFirebird)) {
                     System.out.println("   Re-habilitando constraints...");
                     desabilitarConstraints(tabelaPostgres, true);
