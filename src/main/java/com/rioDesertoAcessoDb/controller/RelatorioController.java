@@ -554,6 +554,7 @@ public class RelatorioController {
             return jdbcTemplate.queryForList(sql);
         }
 
+    //http://localhost:8080/relatorios/coleta-completa/206/filtro?mesAnoInicio=01/2000&mesAnoFim=12/2023
     @GetMapping("coleta-completa/{idZeus}/filtro")
     public Map<String, Object> getRelatorioCompletoPorZeus(
             @PathVariable Integer idZeus,
@@ -626,5 +627,4 @@ public class RelatorioController {
 
         return respostaFinal;
     }
-
 }
