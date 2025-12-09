@@ -1,6 +1,12 @@
 package com.rioDesertoAcessoDb.controller;
 
 import com.rioDesertoAcessoDb.repositories.PiezometroRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +15,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/relatorios")
+@Tag(name = "Relatórios", description = "APIs para geração de relatórios diversos do sistema")
 public class RelatorioController {
 
     @Autowired
@@ -18,6 +25,15 @@ public class RelatorioController {
     private PiezometroRepository piezometroRepository;
 
     @GetMapping("/medias-mensais-todos")
+    @Operation(
+            summary = "Obter médias mensais por período via POST",
+            description = "Retorna as médias mensais de precipitação, cota de régua, nível estático e vazão de bombeamento para um período específico"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Médias mensais retornadas com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Parâmetros de período inválidos")
+    })
+
     public List<Map<String, Object>> getMediasMensais() {
         String sql = """
             SELECT 
@@ -62,6 +78,16 @@ public class RelatorioController {
     }
 
     @PostMapping("/medias-mensais")
+    @Operation(
+            summary = "Obter médias mensais por período via POST",
+            description = "Retorna as médias mensais de precipitação, cota de régua, nível estático e vazão de bombeamento para um período específico"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Médias mensais retornadas com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Parâmetros de período inválidos")
+    })
+
+
     public List<Map<String, Object>> getMediasMensaisPost(@RequestBody FiltroPeriodo filtro) {
 
         String dataInicio = "01/" + filtro.getMesAnoInicio();
@@ -124,6 +150,15 @@ public class RelatorioController {
 
     //lembrar de passar assim: http://localhost:8080/relatorios/medias-mensais?mesAnoInicio=01/2023&mesAnoFim=12/2023
     @GetMapping("/medias-mensais")
+    @Operation(
+            summary = "Obter médias mensais por período",
+            description = "Retorna as médias mensais de precipitação, cota de régua, nível estático e vazão de bombeamento para um período específico via parâmetros de URL"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Médias mensais retornadas com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Parâmetros de período inválidos")
+    })
+
     public List<Map<String, Object>> getMediasMensais(
             @RequestParam String mesAnoInicio,
             @RequestParam String mesAnoFim) {
@@ -186,9 +221,19 @@ public class RelatorioController {
         );
     }
 
-
     //http://localhost:8080/relatorios/piezometro/5/filtro?mesAnoInicio=01/2024&mesAnoFim=12/2024
     @GetMapping("/piezometro/{cdPiezometro}/filtro")
+    @Operation(
+            summary = "Obter dados de piezômetro filtrados",
+            description = "Retorna dados específicos de um piezômetro de acordo com seu tipo (PR, PC, PV, PP) para um período determinado"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Dados do piezômetro retornados com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Tipo de piezômetro não suportado"),
+            @ApiResponse(responseCode = "404", description = "Piezômetro não encontrado")
+    })
+
+
     public List<Map<String, Object>> getDadosPiezometroComFiltro(
             @PathVariable Integer cdPiezometro,
             @RequestParam String mesAnoInicio,
@@ -414,6 +459,16 @@ public class RelatorioController {
 
     //http://localhost:8080/relatorios/coleta/206/filtro?mesAnoInicio=01/2010&mesAnoFim=12/2023
     @GetMapping("coleta/{idZeus}/filtro")
+    @Operation(
+            summary = "Obter relatório de coleta por ponto Zeus",
+            description = "Retorna um relatório de coletas de amostras químicas para um ponto específico (ID Zeus) dentro de um período determinado"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Relatório de coleta retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Ponto Zeus não encontrado")
+    })
+
+
     public List<Map<String, Object>> getRelatorioPorZeus(
             @PathVariable Integer idZeus,
             @RequestParam String mesAnoInicio,
@@ -456,6 +511,15 @@ public class RelatorioController {
         );
 
         @GetMapping("coleta/analises-quimicas/{nRegistro}")
+        @Operation(
+                summary = "Obter análises químicas simplificadas",
+                description = "Retorna análises químicas de uma amostra específica, mapeando abreviações para nomes compreensíveis"
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Análises químicas retornadas com sucesso"),
+                @ApiResponse(responseCode = "404", description = "Número de registro não encontrado")
+        })
+
         public Map<String, Object> getAnalisesQuimicasSimplificadas(@PathVariable Long nRegistro) {
             String sql = "SELECT simbolo, resultado FROM amostraanalise_quimico WHERE N_REGISTRO = ? ORDER BY simbolo";
             List<Map<String, Object>> dadosBrutos = jdbcTemplate.queryForList(sql, nRegistro);
@@ -538,6 +602,25 @@ public class RelatorioController {
         //criei essa api pq ela tá trazendo somente trazer os dados que também existem no zeus
         //não sei se isso tá correto na verdade
         @GetMapping("/piezometros-ativos")
+        @Operation(
+                summary = "Listar piezômetros ativos",
+                description = "Retorna uma lista de todos os piezômetros ativos que também possuem registro no sistema Zeus"
+        )
+        @ApiResponse(
+                responseCode = "200",
+                description = "Lista de piezômetros ativos retornada com sucesso",
+                content = @Content(mediaType = "application/json",
+                        schema = @Schema(implementation = Map.class, example = """
+                [
+                  {
+                    "id_zeus": 206,
+                    "nm_piezometro": "PZ-001",
+                    "cd_piezometro": 206,
+                    "id_piezometro": 1
+                  }
+                ]
+                """))
+        )
         public List<Map<String, Object>> getPiezometrosAtivos() {
             String sql = """
                 SELECT 
@@ -556,6 +639,16 @@ public class RelatorioController {
 
     //http://localhost:8080/relatorios/coleta-completa/206/filtro?mesAnoInicio=01/2000&mesAnoFim=12/2023
     @GetMapping("coleta-completa/{idZeus}/filtro")
+    @Operation(
+            summary = "Obter relatório completo de coleta",
+            description = "Retorna um relatório completo com todas as amostras e análises químicas para um ponto Zeus dentro de um período"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Relatório completo retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Ponto Zeus não encontrado")
+    })
+
+
     public Map<String, Object> getRelatorioCompletoPorZeus(
             @PathVariable Integer idZeus,
             @RequestParam String mesAnoInicio,
