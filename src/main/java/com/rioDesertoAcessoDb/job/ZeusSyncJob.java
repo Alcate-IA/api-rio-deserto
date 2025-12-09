@@ -32,8 +32,8 @@ public class ZeusSyncJob {
             "TB_INSPECAO_PIEZOMETRO_MVTO"
     );
 
-    @Scheduled(fixedDelay = 60000, initialDelay = 5000)
-    //@Scheduled(cron = "0 0 6 * * MON-FRI", zone = "America/Sao_Paulo")
+//    @Scheduled(fixedDelay = 60000, initialDelay = 5000)
+    @Scheduled(cron = "0 0 6 * * MON-FRI", zone = "America/Sao_Paulo")
     public void testConnections() {
         System.out.println("=== SINCRONIZACAO DE DADOS ZEUS ===");
 
@@ -56,7 +56,7 @@ public class ZeusSyncJob {
         System.out.println("2. Testando Firebird...");
         long inicioFirebird = System.currentTimeMillis();
         try (Connection fbConn = DriverManager.getConnection(
-                "jdbc:firebirdsql://192.9.200.7:3050//data1/dataib/zeus20.fdb?encoding=WIN1252",  // ← ADICIONADO
+                "jdbc:firebirdsql://192.9.200.7:3050//data1/dataib/zeus20.fdb?encoding=WIN1252",
                 "ALCATEIA",
                 "8D5Z9s2F")) {
 
