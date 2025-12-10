@@ -641,7 +641,10 @@ public class RelatorioController {
     @GetMapping("coleta-completa/{idZeus}/filtro")
     @Operation(
             summary = "Obter relatório completo de coleta",
-            description = "Retorna um relatório completo com todas as amostras e análises químicas para um ponto Zeus dentro de um período"
+            description = "" +
+                    "\n <br> Retorna um relatório completo com todas as amostras e análises químicas para um ponto Zeus dentro de um período. " +
+                    "\n <br> Você pode testar com idZeus: 206, mesAnoInicio, mesAnoFim" +
+                    "\n <br> exemplo filtro: filtro?mesAnoInicio=01/2000&mesAnoFim=12/2023"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Relatório completo retornado com sucesso"),
@@ -658,18 +661,18 @@ public class RelatorioController {
         String dataFim = "01/" + mesAnoFim;
 
         String sqlAmostras = """
-            SELECT 
-                aq.N_REGISTRO, 
-                aq.DATA, 
-                ide.id_zeus,
-                ide.identificacao
-            FROM amostra_quimico aq
-            INNER JOIN identificacao ide ON (aq.identificacao = ide.codigo)
-            WHERE ide.ID_ZEUS = ?
-              AND aq.DATA >= TO_DATE(?, 'DD/MM/YYYY') 
-              AND aq.DATA <= TO_DATE(?, 'DD/MM/YYYY')
-            ORDER BY aq.N_REGISTRO
-            """;
+        SELECT 
+            aq.N_REGISTRO, 
+            aq.DATA, 
+            ide.id_zeus,
+            ide.identificacao
+        FROM amostra_quimico aq
+        INNER JOIN identificacao ide ON (aq.identificacao = ide.codigo)
+        WHERE ide.ID_ZEUS = ?
+          AND aq.DATA >= TO_DATE(?, 'DD/MM/YYYY') 
+          AND aq.DATA <= TO_DATE(?, 'DD/MM/YYYY')
+        ORDER BY aq.N_REGISTRO
+        """;
 
         List<Map<String, Object>> amostras = jdbcTemplate.queryForList(sqlAmostras, idZeus, dataInicio, dataFim);
 
@@ -679,17 +682,17 @@ public class RelatorioController {
             Long nRegistro = ((Number) amostra.get("N_REGISTRO")).longValue();
 
             String sqlInfoAmostra = """
-                SELECT 
-                    aq.data,
-                    aq.identificacao,
-                    aq.coletor,
-                    aq.tipoamostra,
-                    ide.identificacao as nome_identificacao,
-                    ide.id_zeus
-                FROM amostra_quimico aq
-                LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
-                WHERE aq.N_REGISTRO = ?
-                """;
+            SELECT 
+                aq.data,
+                aq.identificacao,
+                aq.coletor,
+                aq.tipoamostra,
+                ide.identificacao as nome_identificacao,
+                ide.id_zeus
+            FROM amostra_quimico aq
+            LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+            WHERE aq.N_REGISTRO = ?
+            """;
 
             Map<String, Object> infoAmostra = Collections.emptyMap();
             try {
@@ -699,7 +702,17 @@ public class RelatorioController {
                 infoAmostra.put("erro", "Informações não encontradas");
             }
 
-            String sqlAnalises = "SELECT simbolo, resultado FROM amostraanalise_quimico WHERE N_REGISTRO = ? ORDER BY simbolo";
+            String sqlAnalises = """
+            SELECT 
+                aaq.simbolo, 
+                aaq.resultado,
+                an.portaria518
+            FROM amostraanalise_quimico aaq
+            LEFT JOIN analise an ON (aaq.simbolo = an.simbolo)
+            WHERE aaq.N_REGISTRO = ?
+            ORDER BY aaq.simbolo
+            """;
+
             List<Map<String, Object>> analises = jdbcTemplate.queryForList(sqlAnalises, nRegistro);
 
             Map<String, Object> resultadoAmostra = new LinkedHashMap<>();

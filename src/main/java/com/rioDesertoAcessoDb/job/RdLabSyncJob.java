@@ -27,7 +27,7 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
     @Scheduled(cron = "0 0 6 * * MON-FRI", zone = "America/Sao_Paulo")
-    //@Scheduled(fixedDelay = 60000, initialDelay = 5000)
+//    @Scheduled(fixedDelay = 60000, initialDelay = 5000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
         System.out.println("Data/Hora: " + new Date());
@@ -392,51 +392,5 @@ public class RdLabSyncJob {
         System.out.println("      Total batches: " + batchCount + " em " + (fimBatchTotal - inicioBatchTotal) + "ms");
 
         return totalInseridos;
-    }
-
-    // Método para testar manualmente (opcional)
-    public void testarConexoes() {
-        System.out.println("=== TESTE DE CONEXÕES RD LAB ===");
-
-        try {
-            // Testar PostgreSQL
-            System.out.println("Testando PostgreSQL...");
-            String pgVersion = postgresJdbcTemplate.queryForObject("SELECT version()", String.class);
-            System.out.println("PostgreSQL OK: " + pgVersion.split(",")[0]);
-        } catch (Exception e) {
-            System.err.println("PostgreSQL FALHOU: " + e.getMessage());
-            return;
-        }
-
-        // Testar Firebird
-        System.out.println("Testando Firebird...");
-        try (Connection fbConn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD)) {
-
-            String fbProduct = fbConn.getMetaData().getDatabaseProductName();
-            String fbVersion = fbConn.getMetaData().getDatabaseProductVersion();
-            System.out.println("Firebird OK: " + fbProduct + " - " + fbVersion);
-
-            // Testar leitura de uma linha da tabela IDENTIFICACAO
-            try (Statement stmt = fbConn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT FIRST 1 * FROM IDENTIFICACAO")) {
-
-                if (rs.next()) {
-                    ResultSetMetaData meta = rs.getMetaData();
-                    for (int i = 1; i <= meta.getColumnCount(); i++) {
-                        String colName = meta.getColumnName(i);
-                        Object value = rs.getObject(i);
-                        System.out.println("  " + colName + ": " + value);
-                    }
-                } else {
-                    System.out.println("Nenhum registro encontrado na tabela IDENTIFICACAO");
-                }
-            }
-
-        } catch (Exception e) {
-            System.err.println("Firebird FALHOU: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        System.out.println("=== FIM DO TESTE ===");
     }
 }
