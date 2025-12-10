@@ -26,7 +26,7 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
-    @Scheduled(cron = "0 0 6 * * MON-FRI", zone = "America/Sao_Paulo")
+//    @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
 //    @Scheduled(fixedDelay = 60000, initialDelay = 5000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
