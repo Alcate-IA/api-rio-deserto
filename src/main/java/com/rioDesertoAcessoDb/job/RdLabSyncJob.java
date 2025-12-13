@@ -105,7 +105,6 @@ public class RdLabSyncJob {
                 tabelasComErro++;
                 System.err.println("   ✗ ERRO: " + e.getMessage());
 
-                // Se for tabela importante, podemos interromper
                 if (tabelaFirebird.equals("IDENTIFICACAO") || tabelaFirebird.equals("ANALISE")) {
                     System.err.println("   Tabela crítica com erro, abortando sincronização!");
                     break;
@@ -336,18 +335,71 @@ public class RdLabSyncJob {
     }
 
     /**
-     * Retorna as colunas a serem sincronizadas.
-     * Para tabelas muito grandes, busca apenas colunas essenciais para performance.
+     * ========================================================================
+     * CONFIGURAÇÃO DE COLUNAS PARA SINCRONIZAÇÃO
+     * ========================================================================
+     * Este método define quais colunas serão sincronizadas de cada tabela.
+     * Para tabelas grandes, sincronizamos apenas colunas essenciais para
+     * performance.
+     * 
+     * IMPORTANTE: Os nomes das colunas devem estar em MAIÚSCULAS (padrão Firebird)
+     * ========================================================================
      */
     private List<String> getColunasParaSync(Connection conn, String tabela) throws SQLException {
-        // OTIMIZAÇÃO: Para AMOSTRAANALISE_QUIMICO (800k+ registros), buscar só colunas
-        // essenciais
+
+        // ====================================================================
+        // TABELA: AMOSTRAANALISE_QUIMICO (~800k registros)
+        // ====================================================================
+        // Para adicionar novas colunas, inclua o nome (MAIÚSCULO) na lista abaixo.
+        // Exemplo: Arrays.asList("N_REGISTRO", "SIMBOLO", "RESULTADO", "NOVA_COLUNA")
+        //
+        // Colunas disponíveis na tabela original:
+        // N_REGISTRO, SIMBOLO, RESULTADO, VALOR1-9, IMG, IMG2, PROCEDIMENTO,
+        // INCERTEZA, EXECUTANTE, CONFERENTE
+        // ====================================================================
         if ("AMOSTRAANALISE_QUIMICO".equalsIgnoreCase(tabela)) {
-            System.out.println("   [OTIMIZAÇÃO] Buscando apenas colunas essenciais: N_REGISTRO, SIMBOLO, RESULTADO");
-            return Arrays.asList("N_REGISTRO", "SIMBOLO", "RESULTADO");
+            System.out.println("   [OTIMIZAÇÃO] Buscando apenas colunas essenciais");
+            return Arrays.asList(
+                    "N_REGISTRO", // Chave primária
+                    "SIMBOLO", // Símbolo da análise
+                    "RESULTADO" // Resultado da análise
+            // ADICIONE NOVAS COLUNAS AQUI (separadas por vírgula)
+            );
         }
 
-        // Para outras tabelas, buscar todas as colunas
+        // ====================================================================
+        // TABELA: AMOSTRA_QUIMICO (~70k registros)
+        // ====================================================================
+        // Para adicionar novas colunas, inclua o nome (MAIÚSCULO) na lista abaixo.
+        // Exemplo: Arrays.asList("N_REGISTRO", "DATA", ..., "NOVA_COLUNA")
+        //
+        // Colunas disponíveis na tabela original:
+        // N_REGISTRO, DATA, IDENTIFICACAO, COMPLEMENTO, DT_COLETA, SETOR,
+        // DT_PREVISTA, HORA_COLETA, TEMPERATURA, TEMPO, COLETOR, INTERESSADO,
+        // PRAZO, DT_CONCLUSAO, OBSERVACAO, LOCAL, FORNECEDOR, APROVAR, RNC,
+        // LOTE, NUMORCA, TIPOAMOSTRA, PONTOCOLETA, DATAANALISES, DATAFABRICA,
+        // DATAVALIDADE, CLIENTE, TEMPAMOSTRA, HR_RECEBE, HR_CONCLUSAO, IMG,
+        // ADSORCAO, DT_APROVACAO, TECNICO, AVISAR, AREA, ID_AREA, PRIORIDADE,
+        // REPROGRAMAR
+        // ====================================================================
+        if ("AMOSTRA_QUIMICO".equalsIgnoreCase(tabela)) {
+            System.out.println("   [OTIMIZAÇÃO] Buscando apenas colunas essenciais");
+            return Arrays.asList(
+                    "N_REGISTRO", // Chave primária
+                    "DATA", // Data da coleta
+                    "IDENTIFICACAO", // Código de identificação
+                    "COLETOR", // Nome do coletor
+                    "TIPOAMOSTRA" // Tipo de amostra
+            // ADICIONE NOVAS COLUNAS AQUI (separadas por vírgula)
+            );
+        }
+
+        // ====================================================================
+        // OUTRAS TABELAS (IDENTIFICACAO, ANALISE, etc.)
+        // ====================================================================
+        // Para tabelas menores, sincronizamos todas as colunas automaticamente.
+        // Se quiser otimizar alguma outra tabela, adicione um bloco similar acima.
+        // ====================================================================
         return getColunasTabela(conn, tabela);
     }
 
