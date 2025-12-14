@@ -627,6 +627,57 @@ public class RelatorioController {
         String dataInicio = "01/" + mesAnoInicio;
         String dataFim = "01/" + mesAnoFim;
 
+        // Buscar classificação da água e legislações associadas
+        String sqlLegislacao = """
+                SELECT
+                    c.nome_classificacao,
+                    l.id_legislacao,
+                    l.nome_legislacao
+                FROM tb_piezometro p
+                JOIN tipo_classificacao_agua_piezometro c ON p.id_classificacao_agua = c.id_classificacao
+                JOIN classificacao_legislacao cl ON c.id_classificacao = cl.id_classificacao
+                JOIN legislacoes l ON cl.id_legislacao = l.id_legislacao
+                WHERE p.cd_piezometro = ?
+                """;
+
+        List<Map<String, Object>> legislacoesRows = jdbcTemplate.queryForList(sqlLegislacao, idZeus);
+
+        String nomeClassificacao = null;
+        Map<String, Object> legislacoesMap = new LinkedHashMap<>();
+
+        if (!legislacoesRows.isEmpty()) {
+            nomeClassificacao = (String) legislacoesRows.get(0).get("nome_classificacao");
+
+            for (Map<String, Object> row : legislacoesRows) {
+                Integer idLegislacao = (Integer) row.get("id_legislacao");
+                String nomeLegislacao = (String) row.get("nome_legislacao");
+
+                String sqlParametros = """
+                        SELECT
+                            a.simbolo,
+                            pl.parametro
+                        FROM parametros_legislacao pl
+                        JOIN analise a ON pl.id_analise = a.id_analise
+                        WHERE pl.id_legislacao = ?
+                        """;
+
+                List<Map<String, Object>> parametrosList = jdbcTemplate.queryForList(sqlParametros, idLegislacao);
+                List<Map<String, String>> paramsFormatados = new ArrayList<>();
+
+                for (Map<String, Object> param : parametrosList) {
+                    Map<String, String> p = new LinkedHashMap<>();
+                    p.put("simbolo", (String) param.get("simbolo"));
+                    p.put("parametro", (String) param.get("parametro"));
+                    paramsFormatados.add(p);
+                }
+
+                Map<String, Object> detalhesLegislacao = new LinkedHashMap<>();
+                detalhesLegislacao.put("parametros_legislacao", paramsFormatados);
+
+                legislacoesMap.put(nomeLegislacao, detalhesLegislacao);
+            }
+        }
+
         String sqlAmostras = """
                 SELECT
                     aq.N_REGISTRO,
@@ -672,10 +723,8 @@ public class RelatorioController {
             String sqlAnalises = """
                     SELECT
                         aaq.simbolo,
-                        aaq.resultado,
-                        an.portaria518
+                        aaq.resultado
                     FROM amostraanalise_quimico aaq
-                    LEFT JOIN analise an ON (aaq.simbolo = an.simbolo)
                     WHERE aaq.N_REGISTRO = ?
                     ORDER BY aaq.simbolo
                     """;
@@ -696,6 +745,12 @@ public class RelatorioController {
         respostaFinal.put("periodoInicio", dataInicio);
         respostaFinal.put("periodoFim", dataFim);
         respostaFinal.put("totalAmostras", resultadoCompleto.size());
+
+        if (nomeClassificacao != null) {
+            respostaFinal.put("classificao_agua", nomeClassificacao);
+            respostaFinal.put("legislacoes", legislacoesMap);
+        }
+
         respostaFinal.put("amostras", resultadoCompleto);
 
         return respostaFinal;
