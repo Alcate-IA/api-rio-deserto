@@ -155,6 +155,9 @@ public class RdLabSyncJob {
         final int FETCH_SIZE = 2000; // Quantos registros buscar por vez do Firebird
         final int BATCH_SIZE = 1000; // Quantos registros inserir por batch no PostgreSQL
 
+        // Verificar se é a tabela ANALISE para tratamento especial
+        boolean isTabelaAnalise = "ANALISE".equalsIgnoreCase(tabelaFirebird);
+
         // 1. Obter colunas da tabela (com otimização para tabelas grandes)
         List<String> colunasFirebird = getColunasParaSync(firebirdConn, tabelaFirebird);
         if (colunasFirebird.isEmpty()) {
@@ -166,6 +169,12 @@ public class RdLabSyncJob {
         List<String> colunasPostgres = new ArrayList<>();
         for (String coluna : colunasFirebird) {
             colunasPostgres.add(coluna.toLowerCase());
+        }
+
+        // Se for tabela ANALISE, adicionar coluna id_analise
+        if (isTabelaAnalise) {
+            System.out.println("   [ANALISE] Adicionando coluna id_analise para geração automática");
+            colunasPostgres.add(0, "id_analise"); // Adiciona no início da lista
         }
 
         // 2. Desabilitar constraints se for tabela pai
@@ -195,6 +204,7 @@ public class RdLabSyncJob {
         int totalRegistros = 0;
         int totalInseridos = 0;
         int batchCount = 0;
+        int idAnaliseCounter = 1; // Contador para id_analise
         List<Object[]> batchArgs = new ArrayList<>(BATCH_SIZE);
 
         String selectQuery = "SELECT " + String.join(", ", colunasFirebird) + " FROM " + tabelaFirebird;
@@ -215,10 +225,25 @@ public class RdLabSyncJob {
                     totalRegistros++;
 
                     // Extrair valores da linha atual
-                    Object[] args = new Object[columnCount];
-                    for (int i = 0; i < columnCount; i++) {
-                        Object value = rs.getObject(i + 1);
-                        args[i] = tratarValor(value);
+                    Object[] args;
+
+                    if (isTabelaAnalise) {
+                        // Para tabela ANALISE, criar array com espaço para id_analise
+                        args = new Object[columnCount + 1];
+                        args[0] = idAnaliseCounter++; // Preencher id_analise sequencial
+
+                        // Copiar demais valores do Firebird
+                        for (int i = 0; i < columnCount; i++) {
+                            Object value = rs.getObject(i + 1);
+                            args[i + 1] = tratarValor(value);
+                        }
+                    } else {
+                        // Para outras tabelas, processar normalmente
+                        args = new Object[columnCount];
+                        for (int i = 0; i < columnCount; i++) {
+                            Object value = rs.getObject(i + 1);
+                            args[i] = tratarValor(value);
+                        }
                     }
 
                     batchArgs.add(args);

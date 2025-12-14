@@ -29,10 +29,9 @@ public class ZeusSyncJob {
             "TB_NIVEL_AGUA_ITEM",
             "TB_RECURSOS_HIDRICOS_ITEM",
             "TB_INSPECAO_PIEZOMETRO_FREQ",
-            "TB_INSPECAO_PIEZOMETRO_MVTO"
-    );
+            "TB_INSPECAO_PIEZOMETRO_MVTO");
 
-//    @Scheduled(fixedDelay = 60000, initialDelay = 5000)
+    // @Scheduled(fixedDelay = 60000, initialDelay = 5000)
     @Scheduled(cron = "0 0 6 * * MON-FRI", zone = "America/Sao_Paulo")
     public void testConnections() {
         System.out.println("=== SINCRONIZACAO DE DADOS ZEUS ===");
@@ -71,12 +70,16 @@ public class ZeusSyncJob {
             long inicioSincronizacaoTotal = System.currentTimeMillis();
             sincronizarTodasTabelasOrdenadas(fbConn);
             long fimSincronizacaoTotal = System.currentTimeMillis();
-            System.out.println("   Tempo total sincronizacao: " + (fimSincronizacaoTotal - inicioSincronizacaoTotal) + "ms");
+            System.out.println(
+                    "   Tempo total sincronizacao: " + (fimSincronizacaoTotal - inicioSincronizacaoTotal) + "ms");
 
         } catch (Exception e) {
             System.err.println("   Firebird FALHOU: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // 4. Atribuir classificações aleatórias aos piezômetros ativos
+        atribuirClassificacoesAleatorias();
 
         long fimTeste = System.currentTimeMillis();
         System.out.println("Tempo total: " + (fimTeste - inicioTeste) + "ms");
@@ -158,7 +161,7 @@ public class ZeusSyncJob {
             String selectQuery = "SELECT * FROM " + tabelaFirebird;
 
             try (Statement stmt = firebirdConn.createStatement();
-                 ResultSet rs = stmt.executeQuery(selectQuery)) {
+                    ResultSet rs = stmt.executeQuery(selectQuery)) {
 
                 int totalRegistros = 0;
                 while (rs.next()) {
@@ -187,7 +190,6 @@ public class ZeusSyncJob {
                 int registrosInseridos = inserirNoPostgres(tabelaPostgres, colunasPostgres, dadosFirebird);
                 long fimInsercao = System.currentTimeMillis();
 
-
                 // 7. Re-habilitar FKs se necessário
                 if (isTabelaPai(tabelaFirebird)) {
                     System.out.println("   Re-habilitando constraints...");
@@ -199,9 +201,12 @@ public class ZeusSyncJob {
                 // Resumo da tabela
                 System.out.println("   Resumo " + tabelaFirebird + ":");
                 System.out.println("      - Estrutura: " + (fimEstrutura - inicioEstrutura) + "ms");
-                System.out.println("      - Limpeza: " + deleted + " registros deletados em " + (fimLimpeza - inicioLimpeza) + "ms");
-                System.out.println("      - Busca Firebird: " + totalRegistros + " registros em " + (fimBusca - inicioBusca) + "ms");
-                System.out.println("      - Insercao PostgreSQL: " + registrosInseridos + " registros em " + (fimInsercao - inicioInsercao) + "ms");
+                System.out.println("      - Limpeza: " + deleted + " registros deletados em "
+                        + (fimLimpeza - inicioLimpeza) + "ms");
+                System.out.println("      - Busca Firebird: " + totalRegistros + " registros em "
+                        + (fimBusca - inicioBusca) + "ms");
+                System.out.println("      - Insercao PostgreSQL: " + registrosInseridos + " registros em "
+                        + (fimInsercao - inicioInsercao) + "ms");
                 System.out.println("      - Tempo total: " + (fimTabela - inicioTabela) + "ms");
             }
 
@@ -227,8 +232,7 @@ public class ZeusSyncJob {
                 "TB_METEOROLOGIA",
                 "TB_NIVEL_AGUA",
                 "TB_RECURSOS_HIDRICOS",
-                "TB_INSPECAO_PIEZOMETRO"
-        );
+                "TB_INSPECAO_PIEZOMETRO");
         return tabelasPai.contains(tabela.toUpperCase());
     }
 
@@ -268,7 +272,8 @@ public class ZeusSyncJob {
 
     private int inserirNoPostgres(String tabela, List<String> colunas, List<Map<String, Object>> dados) {
         String placeholders = String.join(", ", Collections.nCopies(colunas.size(), "?"));
-        String insertQuery = "INSERT INTO " + tabela + " (" + String.join(", ", colunas) + ") VALUES (" + placeholders + ")";
+        String insertQuery = "INSERT INTO " + tabela + " (" + String.join(", ", colunas) + ") VALUES (" + placeholders
+                + ")";
 
         // Executar batch insert
         int batchSize = 500;
@@ -308,5 +313,54 @@ public class ZeusSyncJob {
         System.out.println("      Total batches: " + batchCount + " em " + (fimBatchTotal - inicioBatchTotal) + "ms");
 
         return totalProcessados;
+    }
+
+    // Isso aqui vai sair, é só para o mommento
+    private void atribuirClassificacoesAleatorias() {
+        System.out.println("\n4. Atribuindo classificações aleatórias aos piezômetros ativos...");
+        long inicioClassificacao = System.currentTimeMillis();
+
+        try {
+            // IDs possíveis de classificação (1 a 4)
+            int[] classificacoesDisponiveis = { 1, 2, 3, 4 };
+            Random random = new Random();
+
+            // Buscar piezômetros ativos da empresa 18
+            String selectQuery = "SELECT cd_piezometro FROM tb_piezometro WHERE fg_situacao = 'A' AND cd_empresa = '18'";
+            List<Integer> piezometrosAtivos = postgresJdbcTemplate.queryForList(selectQuery, Integer.class);
+
+            if (piezometrosAtivos.isEmpty()) {
+                System.out.println("   Nenhum piezômetro ativo encontrado para a empresa 18");
+                return;
+            }
+
+            System.out.println("   Piezômetros ativos encontrados: " + piezometrosAtivos.size());
+
+            // Atualizar cada piezômetro com uma classificação aleatória
+            String updateQuery = "UPDATE tb_piezometro SET id_classificacao_agua = ? WHERE cd_piezometro = ?";
+            int piezometrosAtualizados = 0;
+
+            for (Integer cdPiezometro : piezometrosAtivos) {
+                // Selecionar uma classificação aleatória
+                int classificacaoAleatoria = classificacoesDisponiveis[random
+                        .nextInt(classificacoesDisponiveis.length)];
+
+                // Atualizar o piezômetro
+                int rowsAffected = postgresJdbcTemplate.update(updateQuery, classificacaoAleatoria, cdPiezometro);
+
+                if (rowsAffected > 0) {
+                    piezometrosAtualizados++;
+                }
+            }
+
+            long fimClassificacao = System.currentTimeMillis();
+            System.out.println("   Piezômetros atualizados com classificação: " + piezometrosAtualizados);
+            System.out.println(
+                    "   Tempo atribuição de classificações: " + (fimClassificacao - inicioClassificacao) + "ms");
+
+        } catch (Exception e) {
+            System.err.println("   ERRO ao atribuir classificações aleatórias: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
