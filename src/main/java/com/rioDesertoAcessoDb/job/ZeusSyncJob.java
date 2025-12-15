@@ -30,8 +30,7 @@ public class ZeusSyncJob {
             "TB_RECURSOS_HIDRICOS_ITEM",
             "TB_INSPECAO_PIEZOMETRO_FREQ",
             "TB_INSPECAO_PIEZOMETRO_MVTO");
-
-    // @Scheduled(fixedDelay = 60000, initialDelay = 5000)
+//    @Scheduled(fixedDelay = 60000, initialDelay = 5000)
     @Scheduled(cron = "0 0 6 * * MON-FRI", zone = "America/Sao_Paulo")
     public void testConnections() {
         System.out.println("=== SINCRONIZACAO DE DADOS ZEUS ===");

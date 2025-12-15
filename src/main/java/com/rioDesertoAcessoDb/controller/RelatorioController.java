@@ -655,6 +655,7 @@ public class RelatorioController {
                 String sqlParametros = """
                         SELECT
                             a.simbolo,
+                            a.nome as nome_analise,  -- Campo adicionado
                             pl.parametro
                         FROM parametros_legislacao pl
                         JOIN analise a ON pl.id_analise = a.id_analise
@@ -667,6 +668,7 @@ public class RelatorioController {
                 for (Map<String, Object> param : parametrosList) {
                     Map<String, String> p = new LinkedHashMap<>();
                     p.put("simbolo", (String) param.get("simbolo"));
+                    p.put("nome_analise", (String) param.get("nome_analise")); // Campo adicionado
                     p.put("parametro", (String) param.get("parametro"));
                     paramsFormatados.add(p);
                 }
@@ -723,8 +725,10 @@ public class RelatorioController {
             String sqlAnalises = """
                     SELECT
                         aaq.simbolo,
+                        a.nome as nome_analise,  -- Campo adicionado
                         aaq.resultado
                     FROM amostraanalise_quimico aaq
+                    JOIN analise a ON aaq.simbolo = a.simbolo  -- JOIN adicionado
                     WHERE aaq.N_REGISTRO = ?
                     ORDER BY aaq.simbolo
                     """;
