@@ -59,7 +59,7 @@ public class InspecaoPiezometroMovimentoController {
         Map<String, String> response = new HashMap<>();
 
         try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
-                CallableStatement stmt = conn.prepareCall("{call SP_INSERE_INSPECAO_PZ(?, ?, ?, ?)}")) {
+             CallableStatement stmt = conn.prepareCall("{call SP_INSERE_INSPECAO_PZ(?, ?, ?, ?, ?)}")) {
 
             stmt.setInt(1, request.getCdPiezometro());
 
@@ -83,6 +83,12 @@ public class InspecaoPiezometroMovimentoController {
             stmt.setDouble(3, request.getQtLeitura());
             stmt.setDouble(4, request.getQtNivelEstatico());
 
+            if (request.getObservacao() != null && !request.getObservacao().trim().isEmpty()) {
+                stmt.setString(5, request.getObservacao());
+            } else {
+                stmt.setNull(5, java.sql.Types.VARCHAR);
+            }
+
             System.out.println("Executando procedure SP_INSERE_INSPECAO_PZ...");
 
             conn.setAutoCommit(false);
@@ -95,6 +101,9 @@ public class InspecaoPiezometroMovimentoController {
             response.put("mensagem", "Inspeção inserida com sucesso");
             response.put("cdPiezometro", request.getCdPiezometro().toString());
             response.put("dtInspecao", request.getDtInspecao());
+            if (request.getObservacao() != null) {
+                response.put("observacao", request.getObservacao());
+            }
 
             return ResponseEntity.ok(response);
 

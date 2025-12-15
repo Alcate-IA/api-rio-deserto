@@ -22,19 +22,21 @@ public class InspecaoPiezometroRequest {
     @Schema(description = "Quantidade de nível estático", example = "14.88")
     private Double qtNivelEstatico;
 
-    // Construtores
+    @Schema(description = "Observação da inspeção (opcional)", example = "Piezômetro com leitura atípica", nullable = true)
+    private String observacao; // NOVO CAMPO
+
     public InspecaoPiezometroRequest() {
     }
 
     public InspecaoPiezometroRequest(Integer cdPiezometro, String dtInspecao, Double qtLeitura,
-            Double qtNivelEstatico) {
+                                     Double qtNivelEstatico, String observacao) { // ATUALIZADO
         this.cdPiezometro = cdPiezometro;
         this.dtInspecao = dtInspecao;
         this.qtLeitura = qtLeitura;
         this.qtNivelEstatico = qtNivelEstatico;
+        this.observacao = observacao;
     }
 
-    // Getters e Setters
     public Integer getCdPiezometro() {
         return cdPiezometro;
     }
@@ -65,5 +67,13 @@ public class InspecaoPiezometroRequest {
 
     public void setQtNivelEstatico(Double qtNivelEstatico) {
         this.qtNivelEstatico = qtNivelEstatico;
+    }
+
+    public String getObservacao() {
+        return observacao;
+    }
+
+    public void setObservacao(String observacao) {
+        this.observacao = observacao;
     }
 }
