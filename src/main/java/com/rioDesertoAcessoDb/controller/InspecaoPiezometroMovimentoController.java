@@ -32,7 +32,6 @@ public class InspecaoPiezometroMovimentoController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // Configurações de conexão Firebird Zeus
     private static final String FIREBIRD_URL = "jdbc:firebirdsql://192.9.200.7:3050//data1/dataib/zeus20.fdb?encoding=WIN1252";
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
@@ -62,10 +61,8 @@ public class InspecaoPiezometroMovimentoController {
         try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
                 CallableStatement stmt = conn.prepareCall("{call SP_INSERE_INSPECAO_PZ(?, ?, ?, ?)}")) {
 
-            // Configurar parâmetros da procedure
             stmt.setInt(1, request.getCdPiezometro());
 
-            // Tratamento de data (dd.MM.yyyy ou dd/MM/yyyy -> java.sql.Date)
             String dateStr = request.getDtInspecao();
             java.sql.Date sqlDate;
             try {
@@ -86,10 +83,8 @@ public class InspecaoPiezometroMovimentoController {
             stmt.setDouble(3, request.getQtLeitura());
             stmt.setDouble(4, request.getQtNivelEstatico());
 
-            // Executar a procedure
             System.out.println("Executando procedure SP_INSERE_INSPECAO_PZ...");
 
-            // Garantir que a transação seja commitada
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
@@ -104,12 +99,11 @@ public class InspecaoPiezometroMovimentoController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            e.printStackTrace(); // Logar no console
+            e.printStackTrace();
 
             response.put("status", "erro");
             response.put("mensagem", "Erro ao inserir inspeção: " + e.getMessage());
 
-            // Capturar stack trace
             java.io.StringWriter sw = new java.io.StringWriter();
             java.io.PrintWriter pw = new java.io.PrintWriter(sw);
             e.printStackTrace(pw);

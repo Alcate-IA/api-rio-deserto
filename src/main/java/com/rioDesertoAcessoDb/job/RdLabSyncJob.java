@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.*;
 import java.util.*;
@@ -25,7 +26,7 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
-    @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
+     @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
 //     @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
@@ -66,6 +67,8 @@ public class RdLabSyncJob {
             e.printStackTrace();
             return;
         }
+
+         inserirParametrosLegislacaoAposSync();
 
         long fimTotal = System.currentTimeMillis();
         System.out.println("\n=== SINCORNIZAÇÃO CONCLUÍDA ===");
@@ -446,5 +449,184 @@ public class RdLabSyncJob {
         }
 
         return colunas;
+    }
+
+    @Transactional
+    public void inserirParametrosLegislacaoAposSync() {
+        System.out.println("\n=== INICIANDO INSERÇÃO DE PARÂMETROS DE LEGISLAÇÃO ===");
+        System.out.println("Data/Hora: " + new Date());
+
+        long inicio = System.currentTimeMillis();
+        int totalInseridos = 0;
+        int totalErros = 0;
+
+        // Lista de parâmetros para inserir: {id_analise, id_legislacao, parametro}
+        Object[][] parametros = {
+                {68, 1, "entre 5 e 9"},
+                {117, 1, "inferior a 40"},
+                {142, 1, "até 1"},
+                {139, 1, "remoção mínima de 60%"},
+                {473, 1, "máx 0,5"},
+                {474, 1, "máx 5,0"},
+                {516, 1, "máx 5,0"},
+                {171, 1, "máx 0,2"},
+                {156, 1, "máx 0,5"},
+                {519, 1, "máx 0,2"},
+                {224, 1, "máx 1,0"},
+                {114, 1, "máx 0,1"},
+                {520, 1, "máx 4,0"},
+                {197, 1, "máx 15,0"},
+                {184, 1, "máx 10,0"},
+                {223, 1, "máx 1,0"},
+                {476, 1, "máx 0,01"},
+                {546, 1, "máx 2,0"},
+                {316, 1, "máx 20,0"},
+                {170, 1, "máx 0,1"},
+                {472, 1, "máx 0,30"},
+                {596, 1, "máx 1,0"},
+                {165, 1, "máx 5,0"},
+                {137, 1, "máx 0,5"},
+                {151, 2, "máx 200"},
+                {473, 2, "máx 10"},
+                {474, 2, "máx 700"},
+                {516, 2, "máx 500"},
+                {171, 2, "máx 5"},
+                {156, 2, "máx 10"},
+                {519, 2, "máx 70"},
+                {83, 2, "máx 250000"},
+                {154, 2, "máx 2000"},
+                {475, 2, "máx 50"},
+                {162, 2, "máx 300"},
+                {184, 2, "máx 1500"},
+                {163, 2, "máx 100"},
+                {476, 2, "máx 1"},
+                {555, 2, "máx 70"},
+                {546, 2, "máx 20"},
+                {185, 2, "máx 10000"},
+                {149, 2, "máx 1000"},
+                {170, 2, "máx 100"},
+                {472, 2, "máx 10"},
+                {166, 2, "máx 200000"},
+                {141, 2, "máx 1000000"},
+                {110, 2, "máx 250000"},
+                {621, 2, "máx 50"},
+                {165, 2, "máx 5000"},
+                {137, 2, "máx 3"},
+                {109, 2, "Ausentes em 100 mL"},
+                {121, 2, "Ausentes em 100 mL"},
+                {151, 3, "máx 3500"},
+                {473, 3, "máx 10"},
+                {474, 3, "máx 700"},
+                {516, 3, "máx 500"},
+                {171, 3, "máx 5"},
+                {156, 3, "máx 10"},
+                {154, 3, "máx 2000"},
+                {475, 3, "máx 50"},
+                {162, 3, "máx 2450"},
+                {163, 3, "máx 400"},
+                {476, 3, "máx 1"},
+                {555, 3, "máx 70"},
+                {546, 3, "máx 20"},
+                {185, 3, "máx 10000"},
+                {170, 3, "máx 50"},
+                {472, 3, "máx 10"},
+                {165, 3, "máx 1050"},
+                {137, 3, "máx 140"},
+                {68, 4, "6,0 a 9,0"},
+                {131, 4, "mín 5,0"},
+                {139, 4, "máx 5,0"},
+                {144, 4, "máx 100"},
+                {204, 4, "máx 75"},
+                {121, 4, "máx 1.000 (em 80% das amostras)"},
+                {226, 4, "máx 0,1"},
+                {473, 4, "máx 0,01"},
+                {474, 4, "máx 0,7"},
+                {516, 4, "máx 0,5"},
+                {171, 4, "máx 0,001"},
+                {156, 4, "máx 0,01"},
+                {519, 4, "máx 0,005"},
+                {83, 4, "máx 250"},
+                {82, 4, "máx 0,01"},
+                {224, 4, "máx 0,009"},
+                {475, 4, "máx 0,05"},
+                {197, 4, "máx 0,3"},
+                {184, 4, "máx 1,4"},
+                {127, 4, "máx 0,030"},
+                {163, 4, "máx 0,1"},
+                {476, 4, "máx 0,0002"},
+                {546, 4, "máx 0,025"},
+                {185, 4, "máx 10,0"},
+                {149, 4, "máx 1,0"},
+                {316, 4, "máx 3,7 (pH ≤ 7,5)"},
+                {170, 4, "máx 0,01"},
+                {472, 4, "máx 0,01"},
+                {141, 4, "máx 500"},
+                {110, 4, "máx 250"},
+                {143, 4, "máx 0,002"},
+                {165, 4, "máx 0,18"},
+                {137, 4, "máx 0,003"},
+                {68, 5, "Entre 6,0 e 9,0"},
+                {146, 5, "30,0 mg/L"},
+                {114, 5, "0,1 mg/L"},
+                {154, 5, "0,5 mg/L"},
+                {171, 5, "0,1 mg/L"},
+                {476, 5, "0,005 mg/L"},
+                {546, 5, "1,0 mg/L"},
+                {165, 5, "1,0 mg/L"},
+                {473, 5, "0,1 mg/L"},
+                {170, 5, "0,02 mg/L"},
+                {472, 5, "0,02 mg/L"},
+                {223, 5, "1,0 mg/L"},
+                {137, 5, "0,2 mg/L"}
+        };
+
+        // Primeiro, limpar a tabela existente (opcional - comente se não quiser limpar)
+        try {
+            System.out.println("Limpando tabela parametros_legislacao...");
+            postgresJdbcTemplate.execute("TRUNCATE TABLE parametros_legislacao RESTART IDENTITY CASCADE");
+            System.out.println("Tabela limpa com sucesso.");
+        } catch (Exception e) {
+            System.err.println("Erro ao limpar tabela: " + e.getMessage());
+            // Continua tentando inserir mesmo se falhar ao limpar
+        }
+
+        // Inserir cada parâmetro
+        String insertSQL = "INSERT INTO parametros_legislacao (id_analise, id_legislacao, parametro) VALUES (?, ?, ?)";
+
+        for (Object[] param : parametros) {
+            try {
+                int idAnalise = ((Integer) param[0]).intValue();
+                int idLegislacao = ((Integer) param[1]).intValue();
+                String parametro = (String) param[2];
+
+                // Verificar se a análise existe
+                String checkSQL = "SELECT COUNT(*) FROM analise WHERE id_analise = ?";
+                Integer count = postgresJdbcTemplate.queryForObject(checkSQL, Integer.class, idAnalise);
+
+                if (count != null && count > 0) {
+                    postgresJdbcTemplate.update(insertSQL, idAnalise, idLegislacao, parametro);
+                    totalInseridos++;
+
+                    // Feedback a cada 10 inserções
+                    if (totalInseridos % 10 == 0) {
+                        System.out.println("  Inseridos " + totalInseridos + " registros...");
+                    }
+                } else {
+                    System.err.println("  AVISO: Análise com id " + idAnalise + " não encontrada na tabela analise.");
+                    totalErros++;
+                }
+
+            } catch (Exception e) {
+                totalErros++;
+                System.err.println("  ERRO ao inserir parâmetro: " + Arrays.toString(param) + " - " + e.getMessage());
+            }
+        }
+
+        long fim = System.currentTimeMillis();
+        System.out.println("\n=== INSERÇÃO DE PARÂMETROS CONCLUÍDA ===");
+        System.out.println("Total inseridos: " + totalInseridos);
+        System.out.println("Total erros: " + totalErros);
+        System.out.println("Tempo total: " + (fim - inicio) + "ms");
+        System.out.println("========================================\n");
     }
 }
