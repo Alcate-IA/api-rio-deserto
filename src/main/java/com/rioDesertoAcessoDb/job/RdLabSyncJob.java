@@ -21,12 +21,12 @@ public class RdLabSyncJob {
             "AMOSTRA_QUIMICO",
             "AMOSTRAANALISE_QUIMICO");
 
-    private static final String FIREBIRD_URL = "jdbc:firebirdsql://192.168.108.88:3050//dataib/rdlab.fdb";
+    private static final String FIREBIRD_URL = "jdbc:firebirdsql://192.168.108.88:3050//dataib/rdlab.fdb?encoding=UTF8";
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
     @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
-    // @Scheduled(fixedDelay = 60000, initialDelay = 5000)
+//     @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
         System.out.println("Data/Hora: " + new Date());
@@ -299,13 +299,12 @@ public class RdLabSyncJob {
             return null;
         } else if (value instanceof String) {
             String str = (String) value;
-            try {
-                // Tentar corrigir charset ISO-8859-1 -> UTF-8
-                str = new String(str.getBytes("ISO-8859-1"), "UTF-8");
-            } catch (Exception e) {
-                // Ignora se falhar
-            }
-            // Remover caracteres de controle
+//            try {
+//                // Tentar corrigir charset ISO-8859-1 -> UTF-8
+//                str = new String(str.getBytes("ISO-8859-1"), "UTF-8");
+//            } catch (Exception e) {
+//                // Ignora se falhar
+//            }
             return str.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "");
         }
         return value;
