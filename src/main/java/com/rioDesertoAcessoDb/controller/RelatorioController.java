@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/relatorios")
@@ -577,35 +578,66 @@ public class RelatorioController {
     }
 
     // http://localhost:8080/relatorios/piezometros-ativos
-    // criei essa api pq ela tá trazendo somente trazer os dados que também existem
-    // no zeus
-    // não sei se isso tá correto na verdade
+    //http://localhost:8080/relatorios/piezometros-ativos?tipos=PR
+    // criei essa api pq ela tá trazendo somente trazer os dados que também existem no Zeus e só por ele podemos ver o que está na mina 101
     @GetMapping("/piezometros-ativos")
-    @Operation(summary = "Listar piezômetros ativos", description = "Retorna uma lista de todos os piezômetros ativos que são encontrados no Zeus e no RD Lab com Id em comum")
+    @Operation(summary = "Listar piezômetros ativos", description = "Retorna uma lista de todos os piezômetros ativos que são encontrados no Zeus e no RD Lab com Id em comum. Aceita filtros opcionais por tipo.")
     @ApiResponse(responseCode = "200", description = "Lista de piezômetros ativos retornada com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class, example = """
-            [
-              {
-                "id_zeus": 206,
-                "nm_piezometro": "PZ-001",
-                "cd_piezometro": 206,
-                "id_piezometro": 1
-              }
-            ]
-            """)))
-    public List<Map<String, Object>> getPiezometrosAtivos() {
-        String sql = """
-                SELECT
-                    i.id_zeus,
-                    p.nm_piezometro,
-                    p.cd_piezometro,
-                    p.id_piezometro
-                FROM identificacao i
-                JOIN tb_piezometro p
-                    ON p.cd_piezometro = i.id_zeus
-                WHERE p.fg_situacao = 'A' AND p.cd_empresa = 18
-                """;
+        [
+          {
+            "id_zeus": 206,
+            "nm_piezometro": "PZ-001",
+            "cd_piezometro": 206,
+            "id_piezometro": 1,
+            "fg_situacao": "PP"
+          }
+        ]
+        """)))
+    public List<Map<String, Object>> getPiezometrosAtivos(
+            @RequestParam(required = false) List<String> tipos) {
 
-        return jdbcTemplate.queryForList(sql);
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+                i.id_zeus,
+                p.nm_piezometro,
+                p.cd_piezometro,
+                p.id_piezometro,
+                p.tp_piezometro
+            FROM identificacao i
+            JOIN tb_piezometro p
+                ON p.cd_piezometro = i.id_zeus
+            WHERE p.tp_piezometro IN ('A', 'PP', 'PR', 'PV', 'PC')
+            AND p.cd_empresa = 18
+            """);
+
+        if (tipos != null && !tipos.isEmpty()) {
+            List<String> tiposFiltrados = tipos.stream()
+                    .filter(tipo -> tipo != null && !tipo.trim().isEmpty())
+                    .collect(Collectors.toList());
+
+            if (!tiposFiltrados.isEmpty()) {
+                sql.append(" AND p.tp_piezometro IN (");
+                for (int i = 0; i < tiposFiltrados.size(); i++) {
+                    if (i > 0) sql.append(", ");
+                    sql.append("?");
+                }
+                sql.append(")");
+            }
+        }
+
+        sql.append(" ORDER BY p.nm_piezometro");
+
+        if (tipos != null && !tipos.isEmpty()) {
+            List<String> tiposFiltrados = tipos.stream()
+                    .filter(tipo -> tipo != null && !tipo.trim().isEmpty())
+                    .collect(Collectors.toList());
+
+            if (!tiposFiltrados.isEmpty()) {
+                return jdbcTemplate.queryForList(sql.toString(), tiposFiltrados.toArray());
+            }
+        }
+
+        return jdbcTemplate.queryForList(sql.toString());
     }
 
     // http://localhost:8080/relatorios/coleta-completa/206/filtro?mesAnoInicio=01/2000&mesAnoFim=12/2023
