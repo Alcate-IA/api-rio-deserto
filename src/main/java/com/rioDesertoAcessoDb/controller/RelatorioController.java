@@ -359,51 +359,52 @@ public class RelatorioController {
         String dataFim = "01/" + mesAnoFim;
 
         String sql = """
-                SELECT
-                    ip.qt_cota_superficie AS cota_superficie,
-                    ip.qt_cota_base AS cota_base,
-                    COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
-                    p.precipitacao_total AS precipitacao,
-                    v.vazao_bombeamento AS vazao_bombeamento,
-                    n.media_nivel_estatico AS nivel_estatico,
-                    NULL AS vazao_calha
-                FROM
-                    (SELECT
-                        DATE_TRUNC('month', dt_item)::date AS mes_ano,
-                        SUM(vl_precipitacao) AS precipitacao_total
-                     FROM tb_meteorologia_item
-                     WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY')
-                       AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
-                       AND cd_meteorologia = 12
-                     GROUP BY DATE_TRUNC('month', dt_item)
-                    ) p
-                FULL JOIN
-                    (SELECT
-                        mes_ano_vazao AS mes_ano,
-                        vazao_bombeamento
-                     FROM tb_vazao_mina
-                     WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY')
-                       AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
-                    ) v ON p.mes_ano = v.mes_ano
-                FULL JOIN
-                    (SELECT
-                        DATE_TRUNC('month', ipm.dt_inspecao)::date AS mes_ano,
-                        AVG(ipm.qt_nivel_estatico) AS media_nivel_estatico
-                     FROM tb_inspecao_piezometro_mvto ipm
-                     INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
-                     WHERE ip.cd_piezometro = ?
-                       AND ipm.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY')
-                       AND ipm.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY')
-                     GROUP BY DATE_TRUNC('month', ipm.dt_inspecao)
-                    ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
-                CROSS JOIN (
-                    SELECT qt_cota_superficie, qt_cota_base
-                    FROM tb_inspecao_piezometro
-                    WHERE cd_piezometro = ?
-                    LIMIT 1
-                ) ip
-                ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
-                """;
+            SELECT
+                ip.qt_cota_superficie AS cota_superficie,
+                ip.qt_cota_base AS cota_base,
+                ip.qt_cota_boca AS cota_boca,  -- Novo campo adicionado
+                COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) AS mes_ano,
+                p.precipitacao_total AS precipitacao,
+                v.vazao_bombeamento AS vazao_bombeamento,
+                n.media_nivel_estatico AS nivel_estatico,
+                NULL AS vazao_calha
+            FROM
+                (SELECT
+                    DATE_TRUNC('month', dt_item)::date AS mes_ano,
+                    SUM(vl_precipitacao) AS precipitacao_total
+                 FROM tb_meteorologia_item
+                 WHERE dt_item >= TO_DATE(?, 'DD/MM/YYYY')
+                   AND dt_item <= TO_DATE(?, 'DD/MM/YYYY')
+                   AND cd_meteorologia = 12
+                 GROUP BY DATE_TRUNC('month', dt_item)
+                ) p
+            FULL JOIN
+                (SELECT
+                    mes_ano_vazao AS mes_ano,
+                    vazao_bombeamento
+                 FROM tb_vazao_mina
+                 WHERE mes_ano_vazao >= TO_DATE(?, 'DD/MM/YYYY')
+                   AND mes_ano_vazao <= TO_DATE(?, 'DD/MM/YYYY')
+                ) v ON p.mes_ano = v.mes_ano
+            FULL JOIN
+                (SELECT
+                    DATE_TRUNC('month', ipm.dt_inspecao)::date AS mes_ano,
+                    AVG(ipm.qt_nivel_estatico) AS media_nivel_estatico
+                 FROM tb_inspecao_piezometro_mvto ipm
+                 INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
+                 WHERE ip.cd_piezometro = ?
+                   AND ipm.dt_inspecao >= TO_DATE(?, 'DD/MM/YYYY')
+                   AND ipm.dt_inspecao <= TO_DATE(?, 'DD/MM/YYYY')
+                 GROUP BY DATE_TRUNC('month', ipm.dt_inspecao)
+                ) n ON COALESCE(p.mes_ano, v.mes_ano) = n.mes_ano
+            CROSS JOIN (
+                SELECT qt_cota_superficie, qt_cota_base, qt_cota_boca  -- Adicionado qt_cota_boca
+                FROM tb_inspecao_piezometro
+                WHERE cd_piezometro = ?
+                LIMIT 1
+            ) ip
+            ORDER BY COALESCE(p.mes_ano, v.mes_ano, n.mes_ano) ASC
+            """;
 
         return jdbcTemplate.queryForList(sql,
                 dataInicio, dataFim,
