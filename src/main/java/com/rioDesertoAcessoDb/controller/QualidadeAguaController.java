@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +22,84 @@ public class QualidadeAguaController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @GetMapping("/historico-completo/{idZeus}")
+    @Operation(summary = "Obter histórico completo de coleta", description = "" +
+            "\n <br> Retorna um relatório completo com todas as amostras e análises químicas para um ponto Zeus sem filtros de período ou análises. ")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Histórico completo retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Ponto Zeus não encontrado")
+    })
+    public Map<String, Object> getHistoricoCompletoPorZeus(@PathVariable Integer idZeus) {
+        String sqlAmostras = """
+                SELECT
+                    aq.N_REGISTRO,
+                    aq.DATA,
+                    ide.id_zeus,
+                    ide.identificacao
+                FROM amostra_quimico aq
+                INNER JOIN identificacao ide ON (aq.identificacao = ide.codigo)
+                WHERE ide.ID_ZEUS = ?
+                ORDER BY aq.DATA DESC, aq.N_REGISTRO DESC
+                """;
+
+        List<Map<String, Object>> amostras = jdbcTemplate.queryForList(sqlAmostras, idZeus);
+
+        List<Map<String, Object>> resultadoCompleto = new ArrayList<>();
+
+        for (Map<String, Object> amostra : amostras) {
+            Long nRegistro = ((Number) amostra.get("N_REGISTRO")).longValue();
+
+            String sqlInfoAmostra = """
+                    SELECT
+                        aq.data,
+                        aq.identificacao,
+                        aq.coletor,
+                        aq.tipoamostra,
+                        ide.identificacao as nome_identificacao,
+                        ide.id_zeus
+                    FROM amostra_quimico aq
+                    LEFT JOIN identificacao ide ON aq.identificacao = ide.codigo
+                    WHERE aq.N_REGISTRO = ?
+                    """;
+
+            Map<String, Object> infoAmostra = Collections.emptyMap();
+            try {
+                infoAmostra = jdbcTemplate.queryForMap(sqlInfoAmostra, nRegistro);
+            } catch (Exception e) {
+                infoAmostra = new HashMap<>();
+                infoAmostra.put("erro", "Informações não encontradas");
+            }
+
+            String sqlAnalises = """
+                    SELECT
+                        aaq.simbolo,
+                        a.nome as nome_analise,
+                        aaq.resultado
+                    FROM amostraanalise_quimico aaq
+                    JOIN analise a ON aaq.simbolo = a.simbolo
+                    WHERE aaq.N_REGISTRO = ?
+                    ORDER BY aaq.simbolo
+                    """;
+
+            List<Map<String, Object>> analises = jdbcTemplate.queryForList(sqlAnalises, nRegistro);
+
+            Map<String, Object> resultadoAmostra = new LinkedHashMap<>();
+            resultadoAmostra.put("nRegistro", nRegistro);
+            resultadoAmostra.put("informacoesAmostra", infoAmostra);
+            resultadoAmostra.put("analises", analises);
+            resultadoAmostra.put("totalAnalises", analises.size());
+
+            resultadoCompleto.add(resultadoAmostra);
+        }
+
+        Map<String, Object> respostaFinal = new LinkedHashMap<>();
+        respostaFinal.put("idZeus", idZeus);
+        respostaFinal.put("totalAmostras", resultadoCompleto.size());
+        respostaFinal.put("amostras", resultadoCompleto);
+
+        return respostaFinal;
+    }
 
     @PostMapping("/coleta-completa/filtro-analises")
     @Operation(summary = "Obter relatório completo de coleta", description = "" +
