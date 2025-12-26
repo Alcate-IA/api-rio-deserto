@@ -51,23 +51,23 @@ public class RelatorioNivelEstaticoService {
         String dataInicioHistorico = "01/01/1900";
         String dataFimHistorico = "01/01/2100";
 
-        List<Map<String, Object>> dadosFiltradados;
+        List<Map<String, Object>> dadosFiltrados;
         List<Map<String, Object>> historicoCompleto;
 
         if ("PR".equals(tipoPiezometro)) {
-            dadosFiltradados = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro, dataInicio,
+            dadosFiltrados = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro, dataInicio,
                     dataFim);
             historicoCompleto = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro,
                     dataInicioHistorico,
                     dataFimHistorico);
         } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
-            dadosFiltradados = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro,
+            dadosFiltrados = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro,
                     dataInicio,
                     dataFim);
             historicoCompleto = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro,
                     dataInicioHistorico, dataFimHistorico);
         } else if ("PP".equals(tipoPiezometro)) {
-            dadosFiltradados = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro,
+            dadosFiltrados = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro,
                     dataInicio,
                     dataFim);
             historicoCompleto = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro,
@@ -77,7 +77,7 @@ public class RelatorioNivelEstaticoService {
         }
 
         Map<String, Object> response = new HashMap<>();
-        response.put("dadosFiltradados", dadosFiltradados);
+        response.put("dadosFiltrados", dadosFiltrados);
         response.put("historicoCompleto", historicoCompleto);
 
         return response;
