@@ -2,14 +2,14 @@ package com.rioDesertoAcessoDb.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "avaliacoes_analise_ia_nivel_estatico")
-@Schema(description = "Entidade que representa uma avaliação de análise de IA para nível estático")
-public class AvaliacaoAnaliseIaNivelEstatico {
+@Table(name = "avaliacoes_analise_ia_qualidade_agua")
+@Schema(description = "Entidade que representa uma avaliação de análise de IA para qualidade da água")
+public class AvaliacaoAnaliseIaQualidadeAgua {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,9 +17,9 @@ public class AvaliacaoAnaliseIaNivelEstatico {
     @Schema(description = "ID único da avaliação", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Integer idAvaliacao;
 
-    @Column(name = "id_piezometro", nullable = false)
-    @Schema(description = "Código do piezômetro associado", example = "206")
-    private Integer cdPiezometro;
+    @Column(name = "id_zeus", nullable = false)
+    @Schema(description = "ID da análise no sistema Zeus associado", example = "12345")
+    private Integer idZeus;
 
     @Column(name = "editou_analise", nullable = false)
     @Schema(description = "Indica se a análise foi editada pelo usuário")
@@ -34,10 +34,14 @@ public class AvaliacaoAnaliseIaNivelEstatico {
     private String analiseEditada;
 
     @Column(name = "nota")
-    @Schema(description = "Nota atribuída à análise (ex: 1 a 5)", example = "5")
+    @Schema(description = "Nota atribuída à análise (ex: 1 a 10)", example = "10")
     private Integer nota;
 
     @Column(name = "comentario", length = 1000)
     @Schema(description = "Comentário adicional sobre a avaliação")
     private String comentario;
+
+    @Column(name = "criado_em", insertable = false, updatable = false)
+    @Schema(description = "Data e hora de criação da avaliação", accessMode = Schema.AccessMode.READ_ONLY)
+    private LocalDateTime criadoEm;
 }
