@@ -101,6 +101,18 @@ public class RelatorioNivelEstaticoService {
                         dataFim = "31/12/2100";
                 }
 
+                String dataInicioHistorico = "01/01/1900";
+                String dataFimHistorico = "31/12/2100";
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("dadosFiltrados", fetchDadosDiarios(cdPiezometro, dataInicio, dataFim));
+                response.put("historicoCompleto",
+                                fetchDadosDiarios(cdPiezometro, dataInicioHistorico, dataFimHistorico));
+
+                return response;
+        }
+
+        private Map<String, Object> fetchDadosDiarios(Integer cdPiezometro, String dataInicio, String dataFim) {
                 Map<String, Object> cotas = relatorioNivelEstaticoRepository.findCotasPiezometro(cdPiezometro);
                 List<Map<String, Object>> precipitacao = relatorioNivelEstaticoRepository.findPrecipitacaoDiaria(
                                 dataInicio,
@@ -110,20 +122,20 @@ public class RelatorioNivelEstaticoService {
                                 cdPiezometro,
                                 dataInicio, dataFim);
 
-                Map<String, Object> response = new HashMap<>();
+                Map<String, Object> result = new HashMap<>();
                 if (cotas != null) {
-                        response.put("cota_superficie", cotas.get("cota_superficie"));
-                        response.put("cota_base", cotas.get("cota_base"));
-                        response.put("cota_boca", cotas.get("cota_boca"));
+                        result.put("cota_superficie", cotas.get("cota_superficie"));
+                        result.put("cota_base", cotas.get("cota_base"));
+                        result.put("cota_boca", cotas.get("cota_boca"));
                 } else {
-                        response.put("cota_superficie", null);
-                        response.put("cota_base", null);
-                        response.put("cota_boca", null);
+                        result.put("cota_superficie", null);
+                        result.put("cota_base", null);
+                        result.put("cota_boca", null);
                 }
-                response.put("precipitacao", precipitacao);
-                response.put("vazao_bombeamento", vazao);
-                response.put("nivel_estatico", nivelEstatico);
+                result.put("precipitacao", precipitacao);
+                result.put("vazao_bombeamento", vazao);
+                result.put("nivel_estatico", nivelEstatico);
 
-                return response;
+                return result;
         }
 }

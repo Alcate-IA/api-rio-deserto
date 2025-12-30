@@ -49,7 +49,7 @@ public class RelatorioNivelEstaticoController {
         }
 
         @GetMapping("/piezometro/{cdPiezometro}/diario")
-        @Operation(summary = "Obter dados de piezômetro por dia", description = "Retorna os dados do piezômetro (cotas, precipitacao, vazao, nivel estatico) organizados por dia")
+        @Operation(summary = "Obter dados de piezômetro por dia com histórico", description = "Retorna um objeto contendo os dados filtrados por dia e o histórico completo do piezômetro")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Dados do piezômetro retornados com sucesso"),
                         @ApiResponse(responseCode = "404", description = "Piezômetro não encontrado")
