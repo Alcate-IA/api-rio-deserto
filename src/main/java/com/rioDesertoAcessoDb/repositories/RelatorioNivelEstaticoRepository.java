@@ -172,7 +172,7 @@ public interface RelatorioNivelEstaticoRepository extends JpaRepository<Piezomet
   Map<String, Object> findCotasPiezometro(@Param("cdPiezometro") Integer cdPiezometro);
 
   @Query(value = """
-      SELECT vl_precipitacao AS leitura, TO_CHAR(dt_item, 'DD/MM/YYYY') AS data
+      SELECT vl_precipitacao AS precipitacao, TO_CHAR(dt_item, 'DD/MM/YYYY') AS data
       FROM tb_meteorologia_item
       WHERE cd_meteorologia = 12
         AND dt_item >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
@@ -184,7 +184,7 @@ public interface RelatorioNivelEstaticoRepository extends JpaRepository<Piezomet
       @Param("dataFim") String dataFim);
 
   @Query(value = """
-      SELECT vazao_bombeamento AS leitura, TO_CHAR(mes_ano_vazao, 'DD/MM/YYYY') AS data
+      SELECT vazao_bombeamento AS vazao_bombeamento, TO_CHAR(mes_ano_vazao, 'DD/MM/YYYY') AS data
       FROM tb_vazao_mina
       WHERE mes_ano_vazao >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
         AND mes_ano_vazao <= TO_DATE(:dataFim, 'DD/MM/YYYY')
@@ -195,7 +195,7 @@ public interface RelatorioNivelEstaticoRepository extends JpaRepository<Piezomet
       @Param("dataFim") String dataFim);
 
   @Query(value = """
-      SELECT ipm.qt_nivel_estatico AS leitura, TO_CHAR(ipm.dt_inspecao, 'DD/MM/YYYY') AS data, ipm.ds_observacao AS observacao
+      SELECT ipm.qt_nivel_estatico AS nivel_estatico, TO_CHAR(ipm.dt_inspecao, 'DD/MM/YYYY') AS data, ipm.ds_observacao AS ds_observacao
       FROM tb_inspecao_piezometro_mvto ipm
       INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
       WHERE ip.cd_piezometro = :cdPiezometro
