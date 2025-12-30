@@ -12,74 +12,118 @@ import java.util.Map;
 @Service
 public class RelatorioNivelEstaticoService {
 
-    @Autowired
-    private PiezometroRepository piezometroRepository;
+        @Autowired
+        private PiezometroRepository piezometroRepository;
 
-    @Autowired
-    private RelatorioNivelEstaticoRepository relatorioNivelEstaticoRepository;
+        @Autowired
+        private RelatorioNivelEstaticoRepository relatorioNivelEstaticoRepository;
 
-    public List<Map<String, Object>> getDadosPiezometroComFiltro(Integer cdPiezometro, String mesAnoInicio,
-            String mesAnoFim) {
-        // Verifica o tipo do piezômetro
-        String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
+        public List<Map<String, Object>> getDadosPiezometroComFiltro(Integer cdPiezometro, String mesAnoInicio,
+                        String mesAnoFim) {
+                // Verifica o tipo do piezômetro
+                String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
 
-        String dataInicio = (mesAnoInicio != null && !mesAnoInicio.isEmpty()) ? "01/" + mesAnoInicio : "01/01/1900";
-        String dataFim = (mesAnoFim != null && !mesAnoFim.isEmpty()) ? "01/" + mesAnoFim : "01/01/2100";
+                String dataInicio = (mesAnoInicio != null && !mesAnoInicio.isEmpty()) ? "01/" + mesAnoInicio
+                                : "01/01/1900";
+                String dataFim = (mesAnoFim != null && !mesAnoFim.isEmpty()) ? "01/" + mesAnoFim : "01/01/2100";
 
-        if ("PR".equals(tipoPiezometro)) {
-            return relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro, dataInicio, dataFim);
-        } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
-            return relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro, dataInicio,
-                    dataFim);
-        } else if ("PP".equals(tipoPiezometro)) {
-            return relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro, dataInicio,
-                    dataFim);
-        } else {
-            throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
-        }
-    }
-
-    public Map<String, Object> getDadosPiezometroComFiltroEHistorico(Integer cdPiezometro, String mesAnoInicio,
-            String mesAnoFim) {
-        // Verifica o tipo do piezômetro
-        String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
-
-        String dataInicio = (mesAnoInicio != null && !mesAnoInicio.isEmpty()) ? "01/" + mesAnoInicio : "01/01/1900";
-        String dataFim = (mesAnoFim != null && !mesAnoFim.isEmpty()) ? "01/" + mesAnoFim : "01/01/2100";
-
-        // Datas fixas para o histórico completo
-        String dataInicioHistorico = "01/01/1900";
-        String dataFimHistorico = "01/01/2100";
-
-        List<Map<String, Object>> dadosFiltrados;
-        List<Map<String, Object>> historicoCompleto;
-
-        if ("PR".equals(tipoPiezometro)) {
-            dadosFiltrados = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro, dataInicio,
-                    dataFim);
-            historicoCompleto = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro,
-                    dataInicioHistorico,
-                    dataFimHistorico);
-        } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
-            dadosFiltrados = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro,
-                    dataInicio,
-                    dataFim);
-            historicoCompleto = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro,
-                    dataInicioHistorico, dataFimHistorico);
-        } else if ("PP".equals(tipoPiezometro)) {
-            dadosFiltrados = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro,
-                    dataInicio,
-                    dataFim);
-            historicoCompleto = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro,
-                    dataInicioHistorico, dataFimHistorico);
-        } else {
-            throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
+                if ("PR".equals(tipoPiezometro)) {
+                        return relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro, dataInicio,
+                                        dataFim);
+                } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
+                        return relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(cdPiezometro,
+                                        dataInicio,
+                                        dataFim);
+                } else if ("PP".equals(tipoPiezometro)) {
+                        return relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(cdPiezometro,
+                                        dataInicio,
+                                        dataFim);
+                } else {
+                        throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
+                }
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("dadosFiltrados", dadosFiltrados);
-        response.put("historicoCompleto", historicoCompleto);
+        public Map<String, Object> getDadosPiezometroComFiltroEHistorico(Integer cdPiezometro, String mesAnoInicio,
+                        String mesAnoFim) {
+                // Verifica o tipo do piezômetro
+                String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
 
-        return response;
-    }
+                String dataInicio = (mesAnoInicio != null && !mesAnoInicio.isEmpty()) ? "01/" + mesAnoInicio
+                                : "01/01/1900";
+                String dataFim = (mesAnoFim != null && !mesAnoFim.isEmpty()) ? "01/" + mesAnoFim : "01/01/2100";
+
+                // Datas fixas para o histórico completo
+                String dataInicioHistorico = "01/01/1900";
+                String dataFimHistorico = "01/01/2100";
+
+                List<Map<String, Object>> dadosFiltrados;
+                List<Map<String, Object>> historicoCompleto;
+
+                if ("PR".equals(tipoPiezometro)) {
+                        dadosFiltrados = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro,
+                                        dataInicio,
+                                        dataFim);
+                        historicoCompleto = relatorioNivelEstaticoRepository.findDadosReguaComFiltro(cdPiezometro,
+                                        dataInicioHistorico,
+                                        dataFimHistorico);
+                } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
+                        dadosFiltrados = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(
+                                        cdPiezometro,
+                                        dataInicio,
+                                        dataFim);
+                        historicoCompleto = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(
+                                        cdPiezometro,
+                                        dataInicioHistorico, dataFimHistorico);
+                } else if ("PP".equals(tipoPiezometro)) {
+                        dadosFiltrados = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(
+                                        cdPiezometro,
+                                        dataInicio,
+                                        dataFim);
+                        historicoCompleto = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(
+                                        cdPiezometro,
+                                        dataInicioHistorico, dataFimHistorico);
+                } else {
+                        throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
+                }
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("dadosFiltrados", dadosFiltrados);
+                response.put("historicoCompleto", historicoCompleto);
+
+                return response;
+        }
+
+        public Map<String, Object> getDadosPiezometroDiario(Integer cdPiezometro, String dataInicio, String dataFim) {
+                if (dataInicio == null || dataInicio.isEmpty()) {
+                        dataInicio = "01/01/1900";
+                }
+                if (dataFim == null || dataFim.isEmpty()) {
+                        dataFim = "31/12/2100";
+                }
+
+                Map<String, Object> cotas = relatorioNivelEstaticoRepository.findCotasPiezometro(cdPiezometro);
+                List<Map<String, Object>> precipitacao = relatorioNivelEstaticoRepository.findPrecipitacaoDiaria(
+                                dataInicio,
+                                dataFim);
+                List<Map<String, Object>> vazao = relatorioNivelEstaticoRepository.findVazaoDiaria(dataInicio, dataFim);
+                List<Map<String, Object>> nivelEstatico = relatorioNivelEstaticoRepository.findNivelEstaticoDiario(
+                                cdPiezometro,
+                                dataInicio, dataFim);
+
+                Map<String, Object> response = new HashMap<>();
+                if (cotas != null) {
+                        response.put("cota_superficie", cotas.get("cota_superficie"));
+                        response.put("cota_base", cotas.get("cota_base"));
+                        response.put("cota_boca", cotas.get("cota_boca"));
+                } else {
+                        response.put("cota_superficie", null);
+                        response.put("cota_base", null);
+                        response.put("cota_boca", null);
+                }
+                response.put("precipitacao", precipitacao);
+                response.put("vazao_bombeamento", vazao);
+                response.put("nivel_estatico", nivelEstatico);
+
+                return response;
+        }
 }
