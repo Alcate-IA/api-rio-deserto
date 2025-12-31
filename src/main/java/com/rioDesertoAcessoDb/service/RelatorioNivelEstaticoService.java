@@ -96,23 +96,27 @@ public class RelatorioNivelEstaticoService {
                 // Verifica o tipo do piezômetro
                 String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
 
+                if (dataInicio == null || dataInicio.isEmpty()) {
+                        dataInicio = "01/01/1900";
+                }
+                if (dataFim == null || dataFim.isEmpty()) {
+                        dataFim = "31/12/2100";
+                }
+
+                String dataInicioHistorico = "01/01/1900";
+                String dataFimHistorico = "31/12/2100";
+
                 Map<String, Object> response = new HashMap<>();
 
                 if ("PP".equals(tipoPiezometro)) {
-                        if (dataInicio == null || dataInicio.isEmpty()) {
-                                dataInicio = "01/01/1900";
-                        }
-                        if (dataFim == null || dataFim.isEmpty()) {
-                                dataFim = "31/12/2100";
-                        }
-
-                        String dataInicioHistorico = "01/01/1900";
-                        String dataFimHistorico = "31/12/2100";
-
                         response.put("dadosFiltrados", fetchDadosDiarios(cdPiezometro, dataInicio, dataFim));
                         response.put("historicoCompleto",
                                         fetchDadosDiarios(cdPiezometro, dataInicioHistorico, dataFimHistorico));
-                } else if ("PR".equals(tipoPiezometro) || "PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
+                } else if ("PR".equals(tipoPiezometro)) {
+                        response.put("dadosFiltrados", fetchDadosDiariosRegua(cdPiezometro, dataInicio, dataFim));
+                        response.put("historicoCompleto",
+                                        fetchDadosDiariosRegua(cdPiezometro, dataInicioHistorico, dataFimHistorico));
+                } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
                         response.put("mensagem", "Esse piezômetro é do tipo " + tipoPiezometro);
                 } else {
                         throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
@@ -141,6 +145,30 @@ public class RelatorioNivelEstaticoService {
                         result.put("cota_base", null);
                         result.put("cota_boca", null);
                 }
+                result.put("precipitacao", precipitacao);
+                result.put("vazao_bombeamento", vazao);
+                result.put("nivel_estatico", nivelEstatico);
+
+                return result;
+        }
+
+        private Map<String, Object> fetchDadosDiariosRegua(Integer cdPiezometro, String dataInicio, String dataFim) {
+                Map<String, Object> cotas = relatorioNivelEstaticoRepository.findCotaSuperficieRegua(cdPiezometro);
+                List<Map<String, Object>> precipitacao = relatorioNivelEstaticoRepository.findPrecipitacaoDiaria(
+                                dataInicio,
+                                dataFim);
+                List<Map<String, Object>> vazao = relatorioNivelEstaticoRepository.findVazaoDiaria(dataInicio, dataFim);
+                List<Map<String, Object>> nivelEstatico = relatorioNivelEstaticoRepository.findNivelEstaticoReguaDiario(
+                                cdPiezometro,
+                                dataInicio, dataFim);
+
+                Map<String, Object> result = new HashMap<>();
+                if (cotas != null) {
+                        result.put("cota_superficie", cotas.get("cota_superficie"));
+                } else {
+                        result.put("cota_superficie", null);
+                }
+                result.put("cota_base", null);
                 result.put("precipitacao", precipitacao);
                 result.put("vazao_bombeamento", vazao);
                 result.put("nivel_estatico", nivelEstatico);
