@@ -52,7 +52,6 @@ public class RelatorioNivelEstaticoService {
                                 : "01/01/1900";
                 String dataFim = (mesAnoFim != null && !mesAnoFim.isEmpty()) ? "01/" + mesAnoFim : "01/01/2100";
 
-                // Datas fixas para o histórico completo
                 String dataInicioHistorico = "01/01/1900";
                 String dataFimHistorico = "01/01/2100";
 
@@ -94,20 +93,30 @@ public class RelatorioNivelEstaticoService {
         }
 
         public Map<String, Object> getDadosPiezometroDiario(Integer cdPiezometro, String dataInicio, String dataFim) {
-                if (dataInicio == null || dataInicio.isEmpty()) {
-                        dataInicio = "01/01/1900";
-                }
-                if (dataFim == null || dataFim.isEmpty()) {
-                        dataFim = "31/12/2100";
-                }
-
-                String dataInicioHistorico = "01/01/1900";
-                String dataFimHistorico = "31/12/2100";
+                // Verifica o tipo do piezômetro
+                String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
 
                 Map<String, Object> response = new HashMap<>();
-                response.put("dadosFiltrados", fetchDadosDiarios(cdPiezometro, dataInicio, dataFim));
-                response.put("historicoCompleto",
-                                fetchDadosDiarios(cdPiezometro, dataInicioHistorico, dataFimHistorico));
+
+                if ("PP".equals(tipoPiezometro)) {
+                        if (dataInicio == null || dataInicio.isEmpty()) {
+                                dataInicio = "01/01/1900";
+                        }
+                        if (dataFim == null || dataFim.isEmpty()) {
+                                dataFim = "31/12/2100";
+                        }
+
+                        String dataInicioHistorico = "01/01/1900";
+                        String dataFimHistorico = "31/12/2100";
+
+                        response.put("dadosFiltrados", fetchDadosDiarios(cdPiezometro, dataInicio, dataFim));
+                        response.put("historicoCompleto",
+                                        fetchDadosDiarios(cdPiezometro, dataInicioHistorico, dataFimHistorico));
+                } else if ("PR".equals(tipoPiezometro) || "PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
+                        response.put("mensagem", "Esse piezômetro é do tipo " + tipoPiezometro);
+                } else {
+                        throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
+                }
 
                 return response;
         }
