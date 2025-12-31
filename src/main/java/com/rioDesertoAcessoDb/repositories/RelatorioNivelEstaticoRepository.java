@@ -229,4 +229,18 @@ public interface RelatorioNivelEstaticoRepository extends JpaRepository<Piezomet
             @Param("cdPiezometro") Integer cdPiezometro,
             @Param("dataInicio") String dataInicio,
             @Param("dataFim") String dataFim);
+
+    @Query(value = """
+            SELECT rhi.qt_leitura AS vazao_calha, TO_CHAR(rhi.dt_inspecao, 'DD/MM/YYYY') AS data
+            FROM tb_recursos_hidricos_item rhi
+            INNER JOIN tb_recursos_hidricos rh ON rhi.cd_recursos_hidricos = rh.cd_recursos_hidricos
+            WHERE rh.cd_piezometro = :cdPiezometro
+              AND rhi.dt_inspecao >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
+              AND rhi.dt_inspecao <= TO_DATE(:dataFim, 'DD/MM/YYYY')
+            ORDER BY rhi.dt_inspecao ASC
+            """, nativeQuery = true)
+    List<Map<String, Object>> findVazaoCalhaDiaria(
+            @Param("cdPiezometro") Integer cdPiezometro,
+            @Param("dataInicio") String dataInicio,
+            @Param("dataFim") String dataFim);
 }

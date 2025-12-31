@@ -117,7 +117,11 @@ public class RelatorioNivelEstaticoService {
                         response.put("historicoCompleto",
                                         fetchDadosDiariosRegua(cdPiezometro, dataInicioHistorico, dataFimHistorico));
                 } else if ("PC".equals(tipoPiezometro) || "PV".equals(tipoPiezometro)) {
-                        response.put("mensagem", "Esse piezômetro é do tipo " + tipoPiezometro);
+                        response.put("dadosFiltrados",
+                                        fetchDadosDiariosRecursosHidricos(cdPiezometro, dataInicio, dataFim));
+                        response.put("historicoCompleto",
+                                        fetchDadosDiariosRecursosHidricos(cdPiezometro, dataInicioHistorico,
+                                                        dataFimHistorico));
                 } else {
                         throw new IllegalArgumentException("Tipo de piezômetro não suportado: " + tipoPiezometro);
                 }
@@ -172,6 +176,27 @@ public class RelatorioNivelEstaticoService {
                 result.put("precipitacao", precipitacao);
                 result.put("vazao_bombeamento", vazao);
                 result.put("nivel_estatico", nivelEstatico);
+
+                return result;
+        }
+
+        private Map<String, Object> fetchDadosDiariosRecursosHidricos(Integer cdPiezometro, String dataInicio,
+                        String dataFim) {
+                List<Map<String, Object>> precipitacao = relatorioNivelEstaticoRepository.findPrecipitacaoDiaria(
+                                dataInicio,
+                                dataFim);
+                List<Map<String, Object>> vazao = relatorioNivelEstaticoRepository.findVazaoDiaria(dataInicio, dataFim);
+                List<Map<String, Object>> vazaoCalha = relatorioNivelEstaticoRepository.findVazaoCalhaDiaria(
+                                cdPiezometro,
+                                dataInicio, dataFim);
+
+                Map<String, Object> result = new HashMap<>();
+                result.put("cota_superficie", null);
+                result.put("cota_base", null);
+                result.put("precipitacao", precipitacao);
+                result.put("vazao_bombeamento", vazao);
+                result.put("vazao_calha", vazaoCalha);
+                result.put("nivel_estatico", null);
 
                 return result;
         }
