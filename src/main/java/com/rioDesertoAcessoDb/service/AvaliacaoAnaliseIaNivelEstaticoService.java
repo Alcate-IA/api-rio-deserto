@@ -14,6 +14,10 @@ public class AvaliacaoAnaliseIaNivelEstaticoService {
     @Autowired
     private AvaliacaoAnaliseIaNivelEstaticoRepository repository;
 
+    public Optional<AvaliacaoAnaliseIaNivelEstatico> findById(Integer id) {
+        return repository.findById(id);
+    }
+
     public List<AvaliacaoAnaliseIaNivelEstatico> findAll() {
         return repository.findAll();
     }
@@ -24,5 +28,9 @@ public class AvaliacaoAnaliseIaNivelEstaticoService {
 
     public AvaliacaoAnaliseIaNivelEstatico save(AvaliacaoAnaliseIaNivelEstatico avaliacao) {
         return repository.save(avaliacao);
+    }
+
+    public List<AvaliacaoAnaliseIaNivelEstatico> findNaoAnalisadas() {
+        return repository.findByIaAnalisouFalse();
     }
 }

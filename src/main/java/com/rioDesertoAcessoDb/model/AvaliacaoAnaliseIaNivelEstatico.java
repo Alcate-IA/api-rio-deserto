@@ -40,4 +40,8 @@ public class AvaliacaoAnaliseIaNivelEstatico {
     @Column(name = "comentario", length = 1000)
     @Schema(description = "Comentário adicional sobre a avaliação")
     private String comentario;
+
+    @Column(name = "ia_analisou", nullable = false)
+    @Schema(description = "Indica se a IA já analisou este registro", example = "false")
+    private Boolean iaAnalisou = false;
 }

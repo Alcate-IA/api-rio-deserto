@@ -10,4 +10,6 @@ import java.util.List;
 public interface AvaliacaoAnaliseIaNivelEstaticoRepository
         extends JpaRepository<AvaliacaoAnaliseIaNivelEstatico, Integer> {
     List<AvaliacaoAnaliseIaNivelEstatico> findByCdPiezometro(Integer cdPiezometro);
+
+    List<AvaliacaoAnaliseIaNivelEstatico> findByIaAnalisouFalse();
 }
