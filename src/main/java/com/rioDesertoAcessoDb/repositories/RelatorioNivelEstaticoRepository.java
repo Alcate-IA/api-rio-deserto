@@ -162,4 +162,85 @@ public interface RelatorioNivelEstaticoRepository extends JpaRepository<Piezomet
             @Param("cdPiezometro") Integer cdPiezometro,
             @Param("dataInicio") String dataInicio,
             @Param("dataFim") String dataFim);
+
+    @Query(value = """
+            SELECT qt_cota_superficie AS cota_superficie, qt_cota_base AS cota_base, qt_cota_boca AS cota_boca
+            FROM tb_inspecao_piezometro
+            WHERE cd_piezometro = :cdPiezometro
+            LIMIT 1
+            """, nativeQuery = true)
+    Map<String, Object> findCotasPiezometro(@Param("cdPiezometro") Integer cdPiezometro);
+
+    @Query(value = """
+            SELECT vl_precipitacao AS precipitacao, TO_CHAR(dt_item, 'DD/MM/YYYY') AS data
+            FROM tb_meteorologia_item
+            WHERE cd_meteorologia = 12
+              AND dt_item >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
+              AND dt_item <= TO_DATE(:dataFim, 'DD/MM/YYYY')
+            ORDER BY dt_item ASC
+            """, nativeQuery = true)
+    List<Map<String, Object>> findPrecipitacaoDiaria(
+            @Param("dataInicio") String dataInicio,
+            @Param("dataFim") String dataFim);
+
+    @Query(value = """
+            SELECT vazao_bombeamento AS vazao_bombeamento, TO_CHAR(mes_ano_vazao, 'DD/MM/YYYY') AS data
+            FROM tb_vazao_mina
+            WHERE mes_ano_vazao >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
+              AND mes_ano_vazao <= TO_DATE(:dataFim, 'DD/MM/YYYY')
+            ORDER BY mes_ano_vazao ASC
+            """, nativeQuery = true)
+    List<Map<String, Object>> findVazaoDiaria(
+            @Param("dataInicio") String dataInicio,
+            @Param("dataFim") String dataFim);
+
+    @Query(value = """
+            SELECT ipm.qt_nivel_estatico AS nivel_estatico, TO_CHAR(ipm.dt_inspecao, 'DD/MM/YYYY') AS data, ipm.ds_observacao AS ds_observacao
+            FROM tb_inspecao_piezometro_mvto ipm
+            INNER JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro
+            WHERE ip.cd_piezometro = :cdPiezometro
+              AND ipm.dt_inspecao >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
+              AND ipm.dt_inspecao <= TO_DATE(:dataFim, 'DD/MM/YYYY')
+            ORDER BY ipm.dt_inspecao ASC
+            """, nativeQuery = true)
+    List<Map<String, Object>> findNivelEstaticoDiario(
+            @Param("cdPiezometro") Integer cdPiezometro,
+            @Param("dataInicio") String dataInicio,
+            @Param("dataFim") String dataFim);
+
+    @Query(value = """
+            SELECT vl_cota AS cota_superficie
+            FROM tb_nivel_agua
+            WHERE cd_piezometro = :cdPiezometro
+            LIMIT 1
+            """, nativeQuery = true)
+    Map<String, Object> findCotaSuperficieRegua(@Param("cdPiezometro") Integer cdPiezometro);
+
+    @Query(value = """
+            SELECT nai.qt_nivel_estatico AS nivel_estatico, TO_CHAR(nai.dt_inspecao, 'DD/MM/YYYY') AS data, nai.ds_observacao AS ds_observacao
+            FROM tb_nivel_agua_item nai
+            INNER JOIN tb_nivel_agua na ON nai.cd_nivel_agua = na.cd_nivel_agua
+            WHERE na.cd_piezometro = :cdPiezometro
+              AND nai.dt_inspecao >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
+              AND nai.dt_inspecao <= TO_DATE(:dataFim, 'DD/MM/YYYY')
+            ORDER BY nai.dt_inspecao ASC
+            """, nativeQuery = true)
+    List<Map<String, Object>> findNivelEstaticoReguaDiario(
+            @Param("cdPiezometro") Integer cdPiezometro,
+            @Param("dataInicio") String dataInicio,
+            @Param("dataFim") String dataFim);
+
+    @Query(value = """
+            SELECT rhi.qt_leitura AS vazao_calha, TO_CHAR(rhi.dt_inspecao, 'DD/MM/YYYY') AS data
+            FROM tb_recursos_hidricos_item rhi
+            INNER JOIN tb_recursos_hidricos rh ON rhi.cd_recursos_hidricos = rh.cd_recursos_hidricos
+            WHERE rh.cd_piezometro = :cdPiezometro
+              AND rhi.dt_inspecao >= TO_DATE(:dataInicio, 'DD/MM/YYYY')
+              AND rhi.dt_inspecao <= TO_DATE(:dataFim, 'DD/MM/YYYY')
+            ORDER BY rhi.dt_inspecao ASC
+            """, nativeQuery = true)
+    List<Map<String, Object>> findVazaoCalhaDiaria(
+            @Param("cdPiezometro") Integer cdPiezometro,
+            @Param("dataInicio") String dataInicio,
+            @Param("dataFim") String dataFim);
 }
