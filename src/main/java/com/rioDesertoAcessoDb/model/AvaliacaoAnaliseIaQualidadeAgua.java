@@ -44,4 +44,8 @@ public class AvaliacaoAnaliseIaQualidadeAgua {
     @Column(name = "criado_em", insertable = false, updatable = false)
     @Schema(description = "Data e hora de criação da avaliação", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime criadoEm;
+
+    @Column(name = "ia_analisou", nullable = false)
+    @Schema(description = "Indica se a IA já analisou este registro", example = "false")
+    private Boolean iaAnalisou = false;
 }

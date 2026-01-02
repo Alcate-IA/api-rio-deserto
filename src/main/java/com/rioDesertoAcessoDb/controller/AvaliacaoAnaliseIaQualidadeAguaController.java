@@ -49,6 +49,38 @@ public class AvaliacaoAnaliseIaQualidadeAguaController {
         return service.findByIdZeus(idZeus);
     }
 
+    @GetMapping("/nao-analisadas-ia")
+    @Operation(summary = "Listar avaliações não analisadas pela IA", description = "Retorna uma lista de todas as avaliações onde a IA ainda não realizou a análise")
+    @ApiResponse(responseCode = "200", description = "Lista de avaliações não analisadas retornada com sucesso")
+    public List<AvaliacaoAnaliseIaQualidadeAgua> getNaoAnalisadas() {
+        return service.findNaoAnalisadas();
+    }
+
+    @PutMapping("/{idAvaliacao}/marcar-como-analisada")
+    @Operation(summary = "Marcar avaliação como analisada pela IA", description = "Atualiza o campo ia_analisou para true para uma avaliação específica")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Avaliação marcada como analisada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Avaliação já está marcada como analisada"),
+            @ApiResponse(responseCode = "404", description = "Avaliação não encontrada")
+    })
+    public ResponseEntity<?> marcarComoAnalisada(@PathVariable Integer idAvaliacao) {
+        return service.findById(idAvaliacao).map(avaliacao -> {
+            Map<String, String> response = new HashMap<>();
+            if (Boolean.TRUE.equals(avaliacao.getIaAnalisou())) {
+                response.put("message", "Essa análise (id: " + idAvaliacao + ") já está marcada como analisada");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            avaliacao.setIaAnalisou(true);
+            service.save(avaliacao);
+            response.put("message", "a análise (id: " + idAvaliacao + ") foi marcada como analisada");
+            return ResponseEntity.ok(response);
+        }).orElseGet(() -> {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "a análise não foi encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        });
+    }
+
     @PostMapping
     @Operation(summary = "Criar nova avaliação", description = "Registra uma nova avaliação de análise de IA para a qualidade da água")
     @ApiResponses({
