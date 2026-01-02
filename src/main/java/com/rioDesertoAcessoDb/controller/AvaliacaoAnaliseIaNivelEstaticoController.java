@@ -48,6 +48,13 @@ public class AvaliacaoAnaliseIaNivelEstaticoController {
         return service.findByCdPiezometro(cdPiezometro);
     }
 
+    @GetMapping("/nao-analisadas-ia")
+    @Operation(summary = "Listar avaliações não analisadas pela IA", description = "Retorna uma lista de todas as avaliações onde a IA ainda não realizou a análise")
+    @ApiResponse(responseCode = "200", description = "Lista de avaliações não analisadas retornada com sucesso")
+    public List<AvaliacaoAnaliseIaNivelEstatico> getNaoAnalisadas() {
+        return service.findNaoAnalisadas();
+    }
+
     @PostMapping
     @Operation(summary = "Criar nova avaliação", description = "Registra uma nova avaliação de análise de IA para o nível estático")
     @ApiResponses({

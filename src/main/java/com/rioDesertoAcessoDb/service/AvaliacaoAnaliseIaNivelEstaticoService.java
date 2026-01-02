@@ -25,4 +25,8 @@ public class AvaliacaoAnaliseIaNivelEstaticoService {
     public AvaliacaoAnaliseIaNivelEstatico save(AvaliacaoAnaliseIaNivelEstatico avaliacao) {
         return repository.save(avaliacao);
     }
+
+    public List<AvaliacaoAnaliseIaNivelEstatico> findNaoAnalisadas() {
+        return repository.findByIaAnalisouFalse();
+    }
 }
