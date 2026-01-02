@@ -10,4 +10,6 @@ import java.util.List;
 public interface AvaliacaoAnaliseIaQualidadeAguaRepository
         extends JpaRepository<AvaliacaoAnaliseIaQualidadeAgua, Integer> {
     List<AvaliacaoAnaliseIaQualidadeAgua> findByIdZeus(Integer idZeus);
+
+    List<AvaliacaoAnaliseIaQualidadeAgua> findByIaAnalisouFalse();
 }
