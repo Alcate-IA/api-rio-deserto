@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,5 +27,17 @@ public class FotoInspecaoController {
     @ApiResponse(responseCode = "200", description = "Lista de fotos retornada com sucesso")
     public List<FotoInspecao> buscarTodas() {
         return servico.buscarTodas();
+    }
+
+    @GetMapping("/{idFoto}")
+    @Operation(summary = "Buscar foto de inspeção por ID", description = "Retorna uma foto de inspeção específica com base no seu ID único")
+    @ApiResponse(responseCode = "200", description = "Foto encontrada com sucesso")
+    @ApiResponse(responseCode = "404", description = "Foto não encontrada")
+    public ResponseEntity<FotoInspecao> buscarPorId(@PathVariable Integer idFoto) {
+        FotoInspecao foto = servico.buscarPorId(idFoto);
+        if (foto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(foto);
     }
 }

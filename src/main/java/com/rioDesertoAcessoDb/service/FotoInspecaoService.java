@@ -21,4 +21,14 @@ public class FotoInspecaoService {
     public List<FotoInspecao> buscarTodas() {
         return repositorio.findAll();
     }
+
+    /**
+     * Busca uma foto de inspeção pelo seu ID.
+     * 
+     * @param idFoto ID da foto a ser buscada.
+     * @return A foto encontrada ou null se não existir.
+     */
+    public FotoInspecao buscarPorId(Integer idFoto) {
+        return repositorio.findById(idFoto).orElse(null);
+    }
 }
