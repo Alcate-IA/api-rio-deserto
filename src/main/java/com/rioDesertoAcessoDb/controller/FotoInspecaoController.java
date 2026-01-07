@@ -7,10 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -46,5 +43,15 @@ public class FotoInspecaoController {
     @ApiResponse(responseCode = "200", description = "Lista de fotos retornada com sucesso")
     public List<FotoInspecao> buscarPorPiezometro(@PathVariable Integer cdPiezometro) {
         return servico.buscarPorPiezometro(cdPiezometro);
+    }
+
+    @GetMapping("/piezometro/{cdPiezometro}/periodo")
+    @Operation(summary = "Listar fotos de um piezômetro por período", description = "Retorna uma lista de fotos de inspeção de um piezômetro filtradas por data de início e fim")
+    @ApiResponse(responseCode = "200", description = "Lista de fotos retornada com sucesso")
+    public List<FotoInspecao> buscarPorPiezometroEPeriodo(
+            @PathVariable Integer cdPiezometro,
+            @RequestParam(required = false) String dataInicio,
+            @RequestParam(required = false) String dataFim) {
+        return servico.buscarPorPiezometroEPeriodo(cdPiezometro, dataInicio, dataFim);
     }
 }
