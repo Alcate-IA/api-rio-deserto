@@ -16,6 +16,9 @@ public class FotoInspecaoService {
     @Autowired
     private FotoInspecaoRepository repositorio;
 
+    @Autowired
+    private com.rioDesertoAcessoDb.repositories.PiezometroRepository piezometroRepositorio;
+
     private static final DateTimeFormatter FORMATADOR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
@@ -44,7 +47,10 @@ public class FotoInspecaoService {
      * @return Lista de fotos associadas ao piezômetro.
      */
     public List<FotoInspecao> buscarPorPiezometro(Integer cdPiezometro) {
-        return repositorio.findByCdPiezometro(cdPiezometro);
+        List<FotoInspecao> fotos = repositorio.findByCdPiezometro(cdPiezometro);
+        String idPiezometro = piezometroRepositorio.findIdPiezometroByCdPiezometro(cdPiezometro);
+        fotos.forEach(foto -> foto.setIdPiezometro(idPiezometro));
+        return fotos;
     }
 
     /**
@@ -65,6 +71,9 @@ public class FotoInspecaoService {
                 ? LocalDate.parse(dataFimStr, FORMATADOR).atTime(23, 59, 59)
                 : LocalDateTime.of(2100, 12, 31, 23, 59);
 
-        return repositorio.findByCdPiezometroAndDataInsercaoBetween(cdPiezometro, inicio, fim);
+        List<FotoInspecao> fotos = repositorio.findByCdPiezometroAndDataInsercaoBetween(cdPiezometro, inicio, fim);
+        String idPiezometro = piezometroRepositorio.findIdPiezometroByCdPiezometro(cdPiezometro);
+        fotos.forEach(foto -> foto.setIdPiezometro(idPiezometro));
+        return fotos;
     }
 }

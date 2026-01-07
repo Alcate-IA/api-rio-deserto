@@ -33,4 +33,8 @@ public class FotoInspecao {
     @Column(name = "data_insercao", nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Schema(description = "Data e hora de inserção do registro", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime dataInsercao;
+
+    @Transient
+    @Schema(description = "ID humanamente legível do piezômetro (ex: PZ-01)", example = "PZ-01")
+    private String idPiezometro;
 }
