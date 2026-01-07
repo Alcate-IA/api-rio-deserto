@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Table(name = "tb_foto_inspecao")
@@ -27,4 +29,8 @@ public class FotoInspecao {
     @Column(name = "caminho_completo", nullable = false, columnDefinition = "TEXT")
     @Schema(description = "Caminho completo do arquivo no servidor")
     private String caminhoCompleto;
+
+    @Column(name = "data_insercao", nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Schema(description = "Data e hora de inserção do registro", accessMode = Schema.AccessMode.READ_ONLY)
+    private LocalDateTime dataInsercao;
 }
