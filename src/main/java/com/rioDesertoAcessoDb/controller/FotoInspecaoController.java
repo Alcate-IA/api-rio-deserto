@@ -40,4 +40,11 @@ public class FotoInspecaoController {
         }
         return ResponseEntity.ok(foto);
     }
+
+    @GetMapping("/piezometro/{cdPiezometro}")
+    @Operation(summary = "Listar fotos de um piezômetro", description = "Retorna uma lista de todas as fotos de inspeção associadas a um piezômetro específico")
+    @ApiResponse(responseCode = "200", description = "Lista de fotos retornada com sucesso")
+    public List<FotoInspecao> buscarPorPiezometro(@PathVariable Integer cdPiezometro) {
+        return servico.buscarPorPiezometro(cdPiezometro);
+    }
 }

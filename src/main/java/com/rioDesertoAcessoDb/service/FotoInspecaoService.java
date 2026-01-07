@@ -31,4 +31,14 @@ public class FotoInspecaoService {
     public FotoInspecao buscarPorId(Integer idFoto) {
         return repositorio.findById(idFoto).orElse(null);
     }
+
+    /**
+     * Busca todas as fotos de inspeção de um piezômetro específico.
+     * 
+     * @param cdPiezometro Código do piezômetro.
+     * @return Lista de fotos associadas ao piezômetro.
+     */
+    public List<FotoInspecao> buscarPorPiezometro(Integer cdPiezometro) {
+        return repositorio.findByCdPiezometro(cdPiezometro);
+    }
 }
