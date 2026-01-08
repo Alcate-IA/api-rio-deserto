@@ -20,4 +20,7 @@ public interface PiezometroRepository extends JpaRepository<Piezometro, Integer>
 
     @Query("SELECT p.tpPiezometro FROM Piezometro p WHERE p.cdPiezometro = :cdPiezometro")
     String findTipoPiezometroById(@Param("cdPiezometro") Integer cdPiezometro);
+
+    @Query("SELECT p.idPiezometro FROM Piezometro p WHERE p.cdPiezometro = :cdPiezometro")
+    String findIdPiezometroByCdPiezometro(@Param("cdPiezometro") Integer cdPiezometro);
 }
