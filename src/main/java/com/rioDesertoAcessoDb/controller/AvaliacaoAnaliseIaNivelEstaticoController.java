@@ -5,6 +5,7 @@ import com.rioDesertoAcessoDb.service.AvaliacaoAnaliseIaNivelEstaticoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -144,5 +146,31 @@ public class AvaliacaoAnaliseIaNivelEstaticoController {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleTypeMismatch(HttpMessageNotReadableException ex) {
         return errorResponse("Erro de tipo", "tentou entrar com outro tipo de dado");
+    }
+
+
+    @PostMapping("/analisar")
+    @Operation(summary = "Solicitar análise de IA", description = "Envia os dados para o webhook de IA e retorna a análise gerada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Análise retornada com sucesso"),
+            @ApiResponse(responseCode = "500", description = "Erro ao comunicar com o webhook de IA")
+    })
+    public ResponseEntity<?> solicitarAnaliseIa(@RequestBody Map<String, Object> payload) {
+        String webhookUrl = "http://192.168.100.95:5678/webhook/envio-analise-db";
+
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(90000);
+        factory.setReadTimeout(90000);
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+
+        try {
+            ResponseEntity<Object> response = restTemplate.postForEntity(webhookUrl, payload, Object.class);
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Erro ao comunicar com o webhook: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 }
