@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +81,31 @@ public class AvaliacaoAnaliseIaQualidadeAguaController {
             response.put("message", "a análise não foi encontrada");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         });
+    }
+
+    @PostMapping("/analisar")
+    @Operation(summary = "Solicitar análise de IA", description = "Envia os dados para o webhook de IA e retorna a análise gerada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Análise retornada com sucesso"),
+            @ApiResponse(responseCode = "500", description = "Erro ao comunicar com o webhook de IA")
+    })
+    public ResponseEntity<?> solicitarAnaliseIa(@RequestBody Map<String, Object> payload) {
+        String webhookUrl = "http://192.168.100.95:5678/webhook/envio-analise-db-qualidade";
+
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(90000);
+        factory.setReadTimeout(90000);
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+
+        try {
+            ResponseEntity<Object> response = restTemplate.postForEntity(webhookUrl, payload, Object.class);
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Erro ao comunicar com o webhook: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @PostMapping
