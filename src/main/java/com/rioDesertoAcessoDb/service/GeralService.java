@@ -28,4 +28,8 @@ public class GeralService {
     public java.util.List<java.util.Map<String, Object>> getUltimosMovimentos() {
         return geralRepository.getUltimosMovimentos();
     }
+
+    public java.util.List<java.util.Map<String, Object>> getUltimosMovimentosSistema() {
+        return geralRepository.getUltimosMovimentosSistema();
+    }
 }
