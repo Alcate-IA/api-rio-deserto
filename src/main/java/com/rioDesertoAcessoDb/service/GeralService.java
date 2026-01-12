@@ -24,4 +24,8 @@ public class GeralService {
 
         return contadores;
     }
+
+    public java.util.List<java.util.Map<String, Object>> getUltimosMovimentos() {
+        return geralRepository.getUltimosMovimentos();
+    }
 }

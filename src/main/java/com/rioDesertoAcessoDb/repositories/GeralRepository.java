@@ -28,4 +28,21 @@ public class GeralRepository {
             return 0L;
         }
     }
+
+    public java.util.List<java.util.Map<String, Object>> getUltimosMovimentos() {
+        String sql = "SELECT AQ.data, AQ.identificacao, AQ.coletor, AQ.n_registro, " +
+                "IDE.codigo, IDE.identificacao, IDE.id_zeus, " +
+                "PIE.cd_piezometro, PIE.nm_piezometro " +
+                "from amostra_quimico AQ " +
+                "JOIN identificacao IDE ON AQ.identificacao = IDE.codigo " +
+                "JOIN tb_piezometro PIE ON PIE.cd_piezometro = IDE.id_zeus " +
+                "WHERE PIE.cd_empresa = 18 AND PIE.fg_situacao = 'A' " +
+                "ORDER BY AQ.data DESC " +
+                "LIMIT 10";
+        try {
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            return new java.util.ArrayList<>();
+        }
+    }
 }
