@@ -6,6 +6,7 @@ import com.rioDesertoAcessoDb.dtos.RecursoHidricoRequest;
 import com.rioDesertoAcessoDb.model.InspecaoPiezometroMovimento;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -96,13 +97,9 @@ public class InspecaoPiezometroMovimentoController {
                 stmt.setNull(5, java.sql.Types.VARCHAR);
             }
 
-            System.out.println("Executando procedure SP_INSERE_INSPECAO_PZ para PP/PB...");
-
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
-
-            System.out.println("Procedure executada com sucesso e commit realizado!");
 
             response.put("status", "sucesso");
             response.put("mensagem", "Inspeção PP/PB inserida com sucesso");
@@ -138,6 +135,27 @@ public class InspecaoPiezometroMovimentoController {
             @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
                     content = @Content(mediaType = "application/json"))
     })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Dados do nível de água para piezômetros PR",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = NivelAguaRequest.class),
+                    examples = @ExampleObject(
+                            name = "Exemplo PR",
+                            summary = "Exemplo de nível de água para PR",
+                            description = "Exemplo de requisição para piezômetros do tipo PR",
+                            value = """
+                            {
+                              "cdPiezometro": 685,
+                              "dtInspecao": "11.12.2025",
+                              "qtNivelEstatico": 30,
+                              "observacao": "AAAAAAAAAAA"
+                            }
+                            """
+                    )
+            )
+    )
     public ResponseEntity<Map<String, Object>> inserirNivelAguaPR(
             @Valid @RequestBody NivelAguaRequest request) {
 
@@ -176,13 +194,9 @@ public class InspecaoPiezometroMovimentoController {
                 stmt.setNull(4, java.sql.Types.VARCHAR);
             }
 
-            System.out.println("Executando procedure SP_INSERE_NIVEL_AGUA_PZ para PR...");
-
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
-
-            System.out.println("Procedure executada com sucesso e commit realizado!");
 
             response.put("status", "sucesso");
             response.put("mensagem", "Nível de água PR inserido com sucesso");
@@ -217,6 +231,28 @@ public class InspecaoPiezometroMovimentoController {
             @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
                     content = @Content(mediaType = "application/json"))
     })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Dados do recurso hídrico para piezômetros PC e PV",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RecursoHidricoRequest.class),
+                    examples = @ExampleObject(
+                            name = "Exemplo PC/PV",
+                            summary = "Exemplo de recurso hídrico para PC/PV",
+                            description = "Exemplo de requisição para piezômetros dos tipos PC e PV",
+                            value = """
+                            {
+                              "cdPiezometro": 687,
+                              "dtInspecao": "11.12.2025",
+                              "qtVazao": 33,
+                              "observacao": "AAAAAAAAAAA"
+                            }
+                            """
+                    )
+            )
+    )
+
     public ResponseEntity<Map<String, Object>> inserirRecursoHidricoPCPV(
             @Valid @RequestBody RecursoHidricoRequest request) {
 
@@ -255,13 +291,9 @@ public class InspecaoPiezometroMovimentoController {
                 stmt.setNull(4, java.sql.Types.VARCHAR);
             }
 
-            System.out.println("Executando procedure SP_INSERE_RECURSO_HIDRICO_PZ para PC/PV...");
-
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
-
-            System.out.println("Procedure executada com sucesso e commit realizado!");
 
             response.put("status", "sucesso");
             response.put("mensagem", "Recurso hídrico PC/PV inserido com sucesso");
