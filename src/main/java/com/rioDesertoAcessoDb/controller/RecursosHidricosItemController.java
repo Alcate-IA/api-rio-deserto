@@ -20,4 +20,6 @@ public class RecursosHidricosItemController {
         String sql = "SELECT FIRST 100 * FROM TB_RECURSOS_HIDRICOS_ITEM";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(RecursosHidricosItem.class));
     }
+
+    
 }

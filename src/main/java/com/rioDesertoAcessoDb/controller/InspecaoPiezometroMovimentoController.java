@@ -1,6 +1,8 @@
 package com.rioDesertoAcessoDb.controller;
 
 import com.rioDesertoAcessoDb.dtos.InspecaoPiezometroRequest;
+import com.rioDesertoAcessoDb.dtos.NivelAguaRequest;
+import com.rioDesertoAcessoDb.dtos.RecursoHidricoRequest;
 import com.rioDesertoAcessoDb.model.InspecaoPiezometroMovimento;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,19 +45,22 @@ public class InspecaoPiezometroMovimentoController {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(InspecaoPiezometroMovimento.class));
     }
 
-    @PostMapping
-    @Operation(summary = "Inserir inspeção de piezômetro", description = "Executa a procedure SP_INSERE_INSPECAO_PZ no banco Firebird Zeus para registrar uma nova inspeção de piezômetro. "
-            +
-            "Esta API é utilizada pelo app de campo e pela automação para inserir dados de inspeção.")
+    @PostMapping("/inserir-leitura-pp-pb")
+    @Operation(summary = "Inserir inspeção de piezômetro do tipo PP e PB",
+            description = "Executa a procedure SP_INSERE_INSPECAO_PZ no banco Firebird Zeus para registrar uma nova inspeção de piezômetro. "
+                    + "Campos obrigatórios: cdPiezometro, dtInspecao, qtLeitura, qtNivelEstatico")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Inspeção inserida com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição", content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados", content = @Content(mediaType = "application/json"))
+            @ApiResponse(responseCode = "200", description = "Inspeção inserida com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
+                    content = @Content(mediaType = "application/json"))
     })
-    public ResponseEntity<Map<String, String>> inserirInspecao(
+    public ResponseEntity<Map<String, Object>> inserirInspecaoPpPb(
             @Valid @RequestBody InspecaoPiezometroRequest request) {
 
-        Map<String, String> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
 
         try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
              CallableStatement stmt = conn.prepareCall("{call SP_INSERE_INSPECAO_PZ(?, ?, ?, ?, ?)}")) {
@@ -77,8 +81,11 @@ public class InspecaoPiezometroMovimentoController {
                 java.util.Date date = sdf.parse(dateStr);
                 sqlDate = new java.sql.Date(date.getTime());
             } catch (Exception e) {
-                throw new IllegalArgumentException("Data inválida: " + dateStr + ". Use dd.MM.yyyy ou dd/MM/yyyy");
+                response.put("status", "erro");
+                response.put("mensagem", "Data inválida: " + dateStr + ". Use dd.MM.yyyy, dd/MM/yyyy ou yyyy-MM-dd");
+                return ResponseEntity.badRequest().body(response);
             }
+
             stmt.setDate(2, sqlDate);
             stmt.setDouble(3, request.getQtLeitura());
             stmt.setDouble(4, request.getQtNivelEstatico());
@@ -89,7 +96,7 @@ public class InspecaoPiezometroMovimentoController {
                 stmt.setNull(5, java.sql.Types.VARCHAR);
             }
 
-            System.out.println("Executando procedure SP_INSERE_INSPECAO_PZ...");
+            System.out.println("Executando procedure SP_INSERE_INSPECAO_PZ para PP/PB...");
 
             conn.setAutoCommit(false);
             stmt.execute();
@@ -98,9 +105,11 @@ public class InspecaoPiezometroMovimentoController {
             System.out.println("Procedure executada com sucesso e commit realizado!");
 
             response.put("status", "sucesso");
-            response.put("mensagem", "Inspeção inserida com sucesso");
-            response.put("cdPiezometro", request.getCdPiezometro().toString());
+            response.put("mensagem", "Inspeção PP/PB inserida com sucesso");
+            response.put("cdPiezometro", request.getCdPiezometro());
             response.put("dtInspecao", request.getDtInspecao());
+            response.put("qtLeitura", request.getQtLeitura());
+            response.put("qtNivelEstatico", request.getQtNivelEstatico());
             if (request.getObservacao() != null) {
                 response.put("observacao", request.getObservacao());
             }
@@ -111,12 +120,165 @@ public class InspecaoPiezometroMovimentoController {
             e.printStackTrace();
 
             response.put("status", "erro");
-            response.put("mensagem", "Erro ao inserir inspeção: " + e.getMessage());
+            response.put("mensagem", "Erro ao inserir inspeção PP/PB: " + e.getMessage());
 
-            java.io.StringWriter sw = new java.io.StringWriter();
-            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-            e.printStackTrace(pw);
-            response.put("detalhes", sw.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/inserir-nivel-agua-pr")
+    @Operation(summary = "Inserir nível de água do tipo PR",
+            description = "Executa a procedure SP_INSERE_NIVEL_AGUA_PZ no banco Firebird Zeus para registrar um novo nível de água de piezômetro do tipo PR. "
+                    + "Campos obrigatórios: cdPiezometro, dtInspecao, qtNivelEstatico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Nível de água PR inserido com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
+                    content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<Map<String, Object>> inserirNivelAguaPR(
+            @Valid @RequestBody NivelAguaRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
+             CallableStatement stmt = conn.prepareCall("{call SP_INSERE_NIVEL_AGUA_PZ(?, ?, ?, ?)}")) {
+
+            stmt.setInt(1, request.getCdPiezometro());
+
+            String dateStr = request.getDtInspecao();
+            java.sql.Date sqlDate;
+            try {
+                java.text.SimpleDateFormat sdf;
+                if (dateStr.contains(".")) {
+                    sdf = new java.text.SimpleDateFormat("dd.MM.yyyy");
+                } else if (dateStr.contains("/")) {
+                    sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                } else {
+                    sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                }
+                java.util.Date date = sdf.parse(dateStr);
+                sqlDate = new java.sql.Date(date.getTime());
+            } catch (Exception e) {
+                response.put("status", "erro");
+                response.put("mensagem", "Data inválida: " + dateStr + ". Use dd.MM.yyyy, dd/MM/yyyy ou yyyy-MM-dd");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            stmt.setDate(2, sqlDate);
+            stmt.setDouble(3, request.getQtNivelEstatico());
+
+            if (request.getObservacao() != null && !request.getObservacao().trim().isEmpty()) {
+                stmt.setString(4, request.getObservacao());
+            } else {
+                stmt.setNull(4, java.sql.Types.VARCHAR);
+            }
+
+            System.out.println("Executando procedure SP_INSERE_NIVEL_AGUA_PZ para PR...");
+
+            conn.setAutoCommit(false);
+            stmt.execute();
+            conn.commit();
+
+            System.out.println("Procedure executada com sucesso e commit realizado!");
+
+            response.put("status", "sucesso");
+            response.put("mensagem", "Nível de água PR inserido com sucesso");
+            response.put("cdPiezometro", request.getCdPiezometro());
+            response.put("dtInspecao", request.getDtInspecao());
+            response.put("qtNivelEstatico", request.getQtNivelEstatico());
+            if (request.getObservacao() != null) {
+                response.put("observacao", request.getObservacao());
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            response.put("status", "erro");
+            response.put("mensagem", "Erro ao inserir nível de água PR: " + e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/inserir-recurso-hidrico-pc-pv")
+    @Operation(summary = "Inserir recurso hídrico dos tipos PC e PV",
+            description = "Executa a procedure SP_INSERE_RECURSO_HIDRICO_PZ no banco Firebird Zeus para registrar um novo recurso hídrico de piezômetro dos tipos PC e PV. "
+                    + "Campos obrigatórios: cdPiezometro, dtInspecao, qtVazao")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recurso hídrico PC/PV inserido com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
+                    content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<Map<String, Object>> inserirRecursoHidricoPCPV(
+            @Valid @RequestBody RecursoHidricoRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
+             CallableStatement stmt = conn.prepareCall("{call SP_INSERE_RECURSO_HIDRICO_PZ(?, ?, ?, ?)}")) {
+
+            stmt.setInt(1, request.getCdPiezometro());
+
+            String dateStr = request.getDtInspecao();
+            java.sql.Date sqlDate;
+            try {
+                java.text.SimpleDateFormat sdf;
+                if (dateStr.contains(".")) {
+                    sdf = new java.text.SimpleDateFormat("dd.MM.yyyy");
+                } else if (dateStr.contains("/")) {
+                    sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                } else {
+                    sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                }
+                java.util.Date date = sdf.parse(dateStr);
+                sqlDate = new java.sql.Date(date.getTime());
+            } catch (Exception e) {
+                response.put("status", "erro");
+                response.put("mensagem", "Data inválida: " + dateStr + ". Use dd.MM.yyyy, dd/MM/yyyy ou yyyy-MM-dd");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            stmt.setDate(2, sqlDate);
+            stmt.setDouble(3, request.getQtVazao());
+
+            if (request.getObservacao() != null && !request.getObservacao().trim().isEmpty()) {
+                stmt.setString(4, request.getObservacao());
+            } else {
+                stmt.setNull(4, java.sql.Types.VARCHAR);
+            }
+
+            System.out.println("Executando procedure SP_INSERE_RECURSO_HIDRICO_PZ para PC/PV...");
+
+            conn.setAutoCommit(false);
+            stmt.execute();
+            conn.commit();
+
+            System.out.println("Procedure executada com sucesso e commit realizado!");
+
+            response.put("status", "sucesso");
+            response.put("mensagem", "Recurso hídrico PC/PV inserido com sucesso");
+            response.put("cdPiezometro", request.getCdPiezometro());
+            response.put("dtInspecao", request.getDtInspecao());
+            response.put("qtVazao", request.getQtVazao());
+            if (request.getObservacao() != null) {
+                response.put("observacao", request.getObservacao());
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            response.put("status", "erro");
+            response.put("mensagem", "Erro ao inserir recurso hídrico PC/PV: " + e.getMessage());
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
