@@ -65,9 +65,18 @@ public class GeralRepository {
                 "JOIN tb_nivel_agua NA on NAI.cd_nivel_agua = NA.cd_nivel_agua " +
                 "JOIN tb_piezometro P ON p.cd_piezometro = na.cd_piezometro " +
                 "WHERE p.cd_empresa = 18 and P.fg_situacao = 'A' " +
+                "UNION ALL " +
+                "SELECT 'RECURSOS_HIDRICOS' as origem, rhi.cd_recursos_hidricos_item as id, rhi.dt_inspecao, " +
+                "NULL as nivel_estatico, rhi.qt_leitura as vazao, " +
+                "rhi.ds_observacao, rhi.nm_colaborador_inspecao as colaborador, " +
+                "p.cd_piezometro, p.cd_empresa, p.id_piezometro, p.nm_piezometro, p.tp_piezometro " +
+                "FROM tb_recursos_hidricos_item rhi " +
+                "JOIN tb_recursos_hidricos rh ON rhi.cd_recursos_hidricos = rh.cd_recursos_hidricos " +
+                "JOIN tb_piezometro p ON p.cd_piezometro = rh.cd_piezometro " +
+                "WHERE p.cd_empresa = 18 AND p.fg_situacao = 'A' " +
                 ") as combined_results " +
                 "ORDER BY dt_inspecao DESC " +
-                "LIMIT 10";
+                "LIMIT 300";
         try {
             return jdbcTemplate.queryForList(sql);
         } catch (Exception e) {
