@@ -73,7 +73,7 @@ public class RelatorioNivelEstaticoService {
                         historicoCompleto = relatorioNivelEstaticoRepository.findDadosRecursosHidricosComFiltro(
                                         cdPiezometro,
                                         dataInicioHistorico, dataFimHistorico);
-                } else if ("PP".equals(tipoPiezometro)) {
+                } else if ("PP".equals(tipoPiezometro) || "PB".equals(tipoPiezometro)) {
                         dadosFiltrados = relatorioNivelEstaticoRepository.findDadosPiezometroComumComFiltro(
                                         cdPiezometro,
                                         dataInicio,
@@ -108,7 +108,7 @@ public class RelatorioNivelEstaticoService {
 
                 Map<String, Object> response = new HashMap<>();
 
-                if ("PP".equals(tipoPiezometro)) {
+                if ("PP".equals(tipoPiezometro) || "PB".equals(tipoPiezometro)) {
                         response.put("dadosFiltrados", fetchDadosDiarios(cdPiezometro, dataInicio, dataFim));
                         response.put("historicoCompleto",
                                         fetchDadosDiarios(cdPiezometro, dataInicioHistorico, dataFimHistorico));
