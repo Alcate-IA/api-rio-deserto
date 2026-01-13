@@ -1,7 +1,14 @@
 package com.rioDesertoAcessoDb.controller;
 
 import com.rioDesertoAcessoDb.service.VazaoMinaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vazao-mina")
+@Tag(name = "Vazão da Mina", description = "Endpoints vazão da mina")
 public class VazaoMinaController {
 
     private final VazaoMinaService vazaoMinaService;
@@ -22,37 +30,10 @@ public class VazaoMinaController {
         this.vazaoMinaService = vazaoMinaService;
     }
 
+    @Operation(summary = "Coleta e calcula dados do banco para mostrar na dashboard", description = "Retornar vários dados especificos para a dashboard, painel geral")
     @GetMapping("/estatisticas")
     public ResponseEntity<Map<String, Object>> getEstatisticasVazao() {
         Map<String, Object> dados = vazaoMinaService.getVazaoData();
         return ResponseEntity.ok(dados);
-    }
-
-    @GetMapping("/webhook")
-    public ResponseEntity<?> testWebhook() {
-        RestTemplate restTemplate = new RestTemplate();
-
-        try {
-            String url = "http://192.168.100.95:5678/webhook/analise_mina_total";
-
-            Map<String, String> testRequest = new HashMap<>();
-            testRequest.put("test", "ping");
-
-            String response = restTemplate.postForObject(url, testRequest, String.class);
-
-            return ResponseEntity.ok(Map.of(
-                    "status", "sucesso",
-                    "resposta", response,
-                    "url", url
-            ));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(
-                            "status", "erro",
-                            "mensagem", e.getMessage(),
-                            "stacktrace", Arrays.toString(e.getStackTrace())
-                    ));
-        }
     }
 }

@@ -19,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/geral")
-@Tag(name = "Geral", description = "Endpoints para operações gerais do sistema")
+@Tag(name = "Geral", description = "Endpoints para tela geral da dashboard")
 public class GeralController {
 
         @Autowired
