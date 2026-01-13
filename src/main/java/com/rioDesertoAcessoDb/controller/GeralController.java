@@ -47,7 +47,7 @@ public class GeralController {
                 return ResponseEntity.ok(movimentos);
         }
 
-        @Operation(summary = "Obter últimos movimentos do Sistema", description = "Retorna os últimos 10 registros combinados de inspeção de piezômetro, nível de água e recursos hídricos")
+        @Operation(summary = "Obter últimos movimentos do Zeus", description = "Retorna os últimos 10 registros combinados de inspeção de piezômetro, nível de água e recursos hídricos")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Dados obtidos com sucesso", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = java.util.List.class))),
                         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))

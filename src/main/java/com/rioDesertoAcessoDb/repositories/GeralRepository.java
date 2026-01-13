@@ -49,7 +49,7 @@ public class GeralRepository {
     public java.util.List<java.util.Map<String, Object>> getUltimosMovimentosSistema() {
         String sql = "SELECT * FROM (" +
                 "SELECT 'INSPECAO_PIEZOMETRO' as origem, ipm.cd_inspecao_piezometro_movto as id, ipm.dt_inspecao, " +
-                "ipm.qt_nivel_estatico as nivel_estatico, NULL as vazao, " +
+                "ipm.qt_nivel_estatico as nivel_estatico, CAST(NULL AS DOUBLE PRECISION) as vazao, " +
                 "ipm.ds_observacao, ipm.nm_colaborador_inspecao as colaborador, " +
                 "p.cd_piezometro, p.cd_empresa, p.id_piezometro, p.nm_piezometro, p.tp_piezometro " +
                 "FROM tb_inspecao_piezometro_mvto ipm " +
@@ -58,7 +58,7 @@ public class GeralRepository {
                 "WHERE P.cd_empresa = 18 AND P.fg_situacao = 'A' " +
                 "UNION ALL " +
                 "SELECT 'NIVEL_AGUA' as origem, NAI.cd_nivel_agua_item as id, NAI.dt_inspecao, " +
-                "NULL as nivel_estatico, NAI.qt_nivel_estatico as vazao, " +
+                "NAI.qt_nivel_estatico as nivel_estatico, CAST(NULL AS DOUBLE PRECISION) as vazao, " +
                 "NAI.ds_observacao, NAI.nm_colaborador_inspecao as colaborador, " +
                 "p.cd_piezometro, p.cd_empresa, p.id_piezometro, p.nm_piezometro, p.tp_piezometro " +
                 "FROM tb_nivel_agua_item NAI " +
@@ -67,7 +67,7 @@ public class GeralRepository {
                 "WHERE p.cd_empresa = 18 and P.fg_situacao = 'A' " +
                 "UNION ALL " +
                 "SELECT 'RECURSOS_HIDRICOS' as origem, rhi.cd_recursos_hidricos_item as id, rhi.dt_inspecao, " +
-                "NULL as nivel_estatico, rhi.qt_leitura as vazao, " +
+                "CAST(NULL AS DOUBLE PRECISION) as nivel_estatico, rhi.qt_leitura as vazao, " +
                 "rhi.ds_observacao, rhi.nm_colaborador_inspecao as colaborador, " +
                 "p.cd_piezometro, p.cd_empresa, p.id_piezometro, p.nm_piezometro, p.tp_piezometro " +
                 "FROM tb_recursos_hidricos_item rhi " +
