@@ -30,6 +30,52 @@ public class GeralService {
     }
 
     public java.util.List<java.util.Map<String, Object>> getUltimosMovimentosSistema() {
-        return geralRepository.getUltimosMovimentosSistema();
+        java.util.List<java.util.Map<String, Object>> movimentos = geralRepository.getUltimosMovimentosSistema();
+
+        for (java.util.Map<String, Object> movimento : movimentos) {
+            try {
+                Integer cdPiezometro = (Integer) movimento.get("cd_piezometro");
+                String origem = (String) movimento.get("origem");
+                Object valorObj = movimento.get("nivel_estatico");
+                if (valorObj == null) {
+                    valorObj = movimento.get("vazao");
+                }
+
+                if (cdPiezometro != null && origem != null && valorObj != null) {
+                    java.util.Map<String, Object> estatisticas = geralRepository.getEstatisticasPiezometro(cdPiezometro,
+                            origem);
+
+                    if (estatisticas != null && !estatisticas.isEmpty()) {
+                        java.math.BigDecimal valor = null;
+                        if (valorObj instanceof java.math.BigDecimal) {
+                            valor = (java.math.BigDecimal) valorObj;
+                        } else if (valorObj instanceof Number) {
+                            valor = new java.math.BigDecimal(((Number) valorObj).doubleValue());
+                        }
+
+                        java.math.BigDecimal media = (java.math.BigDecimal) estatisticas.get("media");
+                        java.math.BigDecimal maiorLeitura = (java.math.BigDecimal) estatisticas.get("maior_leitura");
+                        java.math.BigDecimal menorLeitura = (java.math.BigDecimal) estatisticas.get("menor_leitura");
+
+                        java.util.Map<String, Boolean> dados = new HashMap<>();
+                        if (valor != null) {
+                            dados.put("media", media != null && valor.compareTo(media) > 0);
+                            dados.put("maior_leitura", maiorLeitura != null && valor.compareTo(maiorLeitura) == 0);
+                            dados.put("menor_leitura", menorLeitura != null && valor.compareTo(menorLeitura) == 0);
+                        } else {
+                            dados.put("media", false);
+                            dados.put("maior_leitura", false);
+                            dados.put("menor_leitura", false);
+                        }
+                        movimento.put("dados", dados);
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore errors to ensure list is returned even if stats fail
+                e.printStackTrace();
+            }
+        }
+
+        return movimentos;
     }
 }

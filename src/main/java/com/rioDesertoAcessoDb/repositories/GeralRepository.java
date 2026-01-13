@@ -84,4 +84,38 @@ public class GeralRepository {
             return new java.util.ArrayList<>();
         }
     }
+
+    public java.util.Map<String, Object> getEstatisticasPiezometro(Integer cdPiezometro, String origem) {
+        String sql = "";
+        if ("INSPECAO_PIEZOMETRO".equals(origem)) {
+            sql = "SELECT AVG(ipm.qt_nivel_estatico) as media, " +
+                    "MAX(ipm.qt_nivel_estatico) as maior_leitura, " +
+                    "MIN(ipm.qt_nivel_estatico) as menor_leitura " +
+                    "FROM tb_inspecao_piezometro_mvto ipm " +
+                    "JOIN tb_inspecao_piezometro ip ON ipm.cd_inspecao_piezometro = ip.cd_inspecao_piezometro " +
+                    "WHERE ip.cd_piezometro = ?";
+        } else if ("NIVEL_AGUA".equals(origem)) {
+            sql = "SELECT AVG(nai.qt_nivel_estatico) as media, " +
+                    "MAX(nai.qt_nivel_estatico) as maior_leitura, " +
+                    "MIN(nai.qt_nivel_estatico) as menor_leitura " +
+                    "FROM tb_nivel_agua_item nai " +
+                    "JOIN tb_nivel_agua na ON nai.cd_nivel_agua = na.cd_nivel_agua " +
+                    "WHERE na.cd_piezometro = ?";
+        } else if ("RECURSOS_HIDRICOS".equals(origem)) {
+            sql = "SELECT AVG(rhi.qt_leitura) as media, " +
+                    "MAX(rhi.qt_leitura) as maior_leitura, " +
+                    "MIN(rhi.qt_leitura) as menor_leitura " +
+                    "FROM tb_recursos_hidricos_item rhi " +
+                    "JOIN tb_recursos_hidricos rh ON rhi.cd_recursos_hidricos = rh.cd_recursos_hidricos " +
+                    "WHERE rh.cd_piezometro = ?";
+        } else {
+            return new java.util.HashMap<>();
+        }
+
+        try {
+            return jdbcTemplate.queryForMap(sql, cdPiezometro);
+        } catch (Exception e) {
+            return new java.util.HashMap<>();
+        }
+    }
 }
