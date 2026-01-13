@@ -76,7 +76,7 @@ public class GeralRepository {
                 "WHERE p.cd_empresa = 18 AND p.fg_situacao = 'A' " +
                 ") as combined_results " +
                 "ORDER BY dt_inspecao DESC " +
-                "LIMIT 300";
+                "LIMIT 10";
         try {
             return jdbcTemplate.queryForList(sql);
         } catch (Exception e) {
