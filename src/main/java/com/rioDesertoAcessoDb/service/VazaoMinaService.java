@@ -31,6 +31,46 @@ public class VazaoMinaService {
             response.put("resultado", new HashMap<>());
         }
 
+        // Obter análise sazonal da nova query
+        Map<String, Object> analisesSazonais = vazaoMinaRepository.findTendenciaSazonalVazao();
+
+        // Converter o JSON string para objeto se necessário
+        if (analisesSazonais != null && !analisesSazonais.isEmpty()) {
+            // CRIAR UMA CÓPIA MUTÁVEL do Map retornado pelo JPA
+            Map<String, Object> analisesSazonaisMutavel = new HashMap<>(analisesSazonais);
+
+            // Processar historico_variacoes
+            List<Map<String, Object>> historicoList = new ArrayList<>();
+
+            if (analisesSazonaisMutavel.get("historico_variacoes") instanceof String) {
+                try {
+                    String historicoJson = (String) analisesSazonaisMutavel.get("historico_variacoes");
+                    historicoList = objectMapper.readValue(
+                            historicoJson,
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, Map.class)
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (analisesSazonaisMutavel.get("historico_variacoes") instanceof List) {
+                historicoList = (List<Map<String, Object>>) analisesSazonaisMutavel.get("historico_variacoes");
+            }
+
+            // Calcular estatísticas dos dados
+            Map<String, Object> dadosAnalise = calcularEstatisticasTendencia(historicoList);
+
+            // Adicionar o histórico processado
+            dadosAnalise.put("historico", historicoList);
+
+            // Remover o campo original e adicionar o novo estrutura
+            analisesSazonaisMutavel.remove("historico_variacoes");
+            analisesSazonaisMutavel.put("dados", dadosAnalise);
+
+            response.put("analisesSazonais", analisesSazonaisMutavel);
+        } else {
+            response.put("analisesSazonais", new HashMap<>());
+        }
+
         // Obter histórico completo da segunda query
         List<Object[]> historico = vazaoMinaRepository.findHistoricoCompleto();
         List<Map<String, Object>> historicoFormatado = historico.stream()
@@ -52,22 +92,97 @@ public class VazaoMinaService {
         return response;
     }
 
+    /**
+     * Calcula estatísticas de tendência a partir da lista histórica
+     */
+    private Map<String, Object> calcularEstatisticasTendencia(List<Map<String, Object>> historicoList) {
+        Map<String, Object> estatisticas = new HashMap<>();
+
+        if (historicoList == null || historicoList.isEmpty()) {
+            return estatisticas;
+        }
+
+        // Inicializar variáveis
+        Map<String, Object> maiorTendencia = null;
+        Map<String, Object> menorTendencia = null;
+        int positivas = 0;
+        int negativas = 0;
+
+        for (Map<String, Object> item : historicoList) {
+            try {
+                // Converter porcentagem para double
+                Object variacaoObj = item.get("variacao_percentual");
+                if (variacaoObj == null) continue;
+
+                double variacao = 0.0;
+                if (variacaoObj instanceof Number) {
+                    variacao = ((Number) variacaoObj).doubleValue();
+                } else if (variacaoObj instanceof String) {
+                    variacao = Double.parseDouble((String) variacaoObj);
+                }
+
+                // Verificar se é maior tendência
+                if (maiorTendencia == null ||
+                        ((Number) maiorTendencia.get("porcentagem")).doubleValue() < variacao) {
+                    maiorTendencia = new HashMap<>();
+                    maiorTendencia.put("ano", item.get("ano"));
+                    maiorTendencia.put("porcentagem", variacao);
+                }
+
+                // Verificar se é menor tendência
+                if (menorTendencia == null ||
+                        ((Number) menorTendencia.get("porcentagem")).doubleValue() > variacao) {
+                    menorTendencia = new HashMap<>();
+                    menorTendencia.put("ano", item.get("ano"));
+                    menorTendencia.put("porcentagem", variacao);
+                }
+
+                // Contar positivas e negativas
+                if (variacao > 0) {
+                    positivas++;
+                } else if (variacao < 0) {
+                    negativas++;
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Adicionar às estatísticas
+        if (maiorTendencia != null) {
+            estatisticas.put("maiorTendencia", maiorTendencia);
+        }
+
+        if (menorTendencia != null) {
+            estatisticas.put("menorTendencia", menorTendencia);
+        }
+
+        // Determinar tendência geral
+        boolean tendenciaPositiva = positivas > negativas;
+        estatisticas.put("tendencia", tendenciaPositiva);
+        estatisticas.put("contagem", Map.of(
+                "positivas", positivas,
+                "negativas", negativas,
+                "total", historicoList.size()
+        ));
+
+        return estatisticas;
+    }
+
     private Map<String, Object> chamarWebhookAnalise(List<Map<String, Object>> historicoCompleto) {
         try {
             String webhookUrl = "http://192.168.100.95:5678/webhook/analise_mina_total";
 
-            // Versão SIMPLES igual ao endpoint de teste
             String response = restTemplate.postForObject(
                     webhookUrl,
-                    Map.of("historico", historicoCompleto), // Usar Map.of como no teste
+                    Map.of("historico", historicoCompleto),
                     String.class
             );
 
-            // Tentar parsear a resposta como JSON
             try {
                 return objectMapper.readValue(response, Map.class);
             } catch (Exception e) {
-                // Se não for JSON válido, retornar como string
                 return Map.of(
                         "resposta_raw", response,
                         "aviso", "Resposta não é JSON válido"
