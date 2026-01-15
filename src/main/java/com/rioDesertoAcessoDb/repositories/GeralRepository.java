@@ -21,7 +21,7 @@ public class GeralRepository {
 
     public Long getContadoresRdLab() {
         String sql = "SELECT count(ide.*) FROM identificacao ide " +
-                "JOIN tb_piezometro pie ON pie.cd_piezometro = ide.id_zeus";
+                "JOIN tb_piezometro pie ON pie.cd_piezometro = ide.id_zeus WHERE pie.cd_empresa = 18 and pie.fg_situacao = 'A'";
         try {
             return jdbcTemplate.queryForObject(sql, Long.class);
         } catch (Exception e) {
