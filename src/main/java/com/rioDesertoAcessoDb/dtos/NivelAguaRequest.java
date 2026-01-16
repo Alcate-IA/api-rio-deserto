@@ -15,4 +15,6 @@ public class NivelAguaRequest {
     private Double qtNivelEstatico;
 
     private String observacao;
+
+    private String coletor;
 }

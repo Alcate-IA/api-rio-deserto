@@ -15,4 +15,6 @@ public class RecursoHidricoRequest {
     private Double qtVazao;
 
     private String observacao;
+
+    private String coletor;
 }
