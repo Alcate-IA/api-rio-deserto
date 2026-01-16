@@ -47,16 +47,12 @@ public class InspecaoPiezometroMovimentoController {
     }
 
     @PostMapping("/inserir-leitura-pp-pb")
-    @Operation(summary = "Inserir inspeção de piezômetro do tipo PP e PB",
-            description = "Executa a procedure SP_INSERE_INSPECAO_PZ no banco Firebird Zeus para registrar uma nova inspeção de piezômetro. "
-                    + "Campos obrigatórios: cdPiezometro, dtInspecao, qtLeitura, qtNivelEstatico")
+    @Operation(summary = "Inserir inspeção de piezômetro do tipo PP e PB", description = "Executa a procedure SP_INSERE_INSPECAO_PZ no banco Firebird Zeus para registrar uma nova inspeção de piezômetro. "
+            + "Campos obrigatórios: cdPiezometro, dtInspecao, qtLeitura, qtNivelEstatico")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Inspeção inserida com sucesso",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição",
-                    content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
-                    content = @Content(mediaType = "application/json"))
+            @ApiResponse(responseCode = "200", description = "Inspeção inserida com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados", content = @Content(mediaType = "application/json"))
     })
     public ResponseEntity<Map<String, Object>> inserirInspecaoPpPb(
             @Valid @RequestBody InspecaoPiezometroRequest request) {
@@ -64,7 +60,13 @@ public class InspecaoPiezometroMovimentoController {
         Map<String, Object> response = new HashMap<>();
 
         try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
-             CallableStatement stmt = conn.prepareCall("{call SP_INSERE_INSPECAO_PZ(?, ?, ?, ?, ?)}")) {
+                CallableStatement stmt = conn.prepareCall("{call SP_INSERE_INSPECAO_PZ(?, ?, ?, ?, ?, ?)}")) {
+
+            if (request.getColetor() == null || request.getColetor().trim().isEmpty()) {
+                response.put("status", "erro");
+                response.put("mensagem", "O campo coletor é obrigatório e não pode ser vazio");
+                return ResponseEntity.badRequest().body(response);
+            }
 
             stmt.setInt(1, request.getCdPiezometro());
 
@@ -97,9 +99,15 @@ public class InspecaoPiezometroMovimentoController {
                 stmt.setNull(5, java.sql.Types.VARCHAR);
             }
 
+            String coletorComSufixo = request.getColetor() + " via App";
+            stmt.setString(6, coletorComSufixo);
+
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
+
+            System.out.println("Procedimento PP/PB preparado para: " + request.getCdPiezometro());
+            System.out.println("Coletor formatado: " + coletorComSufixo);
 
             response.put("status", "sucesso");
             response.put("mensagem", "Inspeção PP/PB inserida com sucesso");
@@ -124,45 +132,35 @@ public class InspecaoPiezometroMovimentoController {
     }
 
     @PostMapping("/inserir-nivel-agua-pr")
-    @Operation(summary = "Inserir nível de água do tipo PR",
-            description = "Executa a procedure SP_INSERE_NIVEL_AGUA_PZ no banco Firebird Zeus para registrar um novo nível de água de piezômetro do tipo PR. "
-                    + "Campos obrigatórios: cdPiezometro, dtInspecao, qtNivelEstatico")
+    @Operation(summary = "Inserir nível de água do tipo PR", description = "Executa a procedure SP_INSERE_NIVEL_AGUA_PZ no banco Firebird Zeus para registrar um novo nível de água de piezômetro do tipo PR. "
+            + "Campos obrigatórios: cdPiezometro, dtInspecao, qtNivelEstatico")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Nível de água PR inserido com sucesso",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição",
-                    content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
-                    content = @Content(mediaType = "application/json"))
+            @ApiResponse(responseCode = "200", description = "Nível de água PR inserido com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados", content = @Content(mediaType = "application/json"))
     })
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Dados do nível de água para piezômetros PR",
-            required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = NivelAguaRequest.class),
-                    examples = @ExampleObject(
-                            name = "Exemplo PR",
-                            summary = "Exemplo de nível de água para PR",
-                            description = "Exemplo de requisição para piezômetros do tipo PR",
-                            value = """
-                            {
-                              "cdPiezometro": 685,
-                              "dtInspecao": "11.12.2025",
-                              "qtNivelEstatico": 30,
-                              "observacao": "AAAAAAAAAAA"
-                            }
-                            """
-                    )
-            )
-    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do nível de água para piezômetros PR", required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = NivelAguaRequest.class), examples = @ExampleObject(name = "Exemplo PR", summary = "Exemplo de nível de água para PR", description = "Exemplo de requisição para piezômetros do tipo PR", value = """
+            {
+              "cdPiezometro": 685,
+              "dtInspecao": "11.12.2025",
+              "qtNivelEstatico": 30,
+              "observacao": "AAAAAAAAAAA",
+              "coletor": "Matheus"
+            }
+            """)))
     public ResponseEntity<Map<String, Object>> inserirNivelAguaPR(
             @Valid @RequestBody NivelAguaRequest request) {
 
         Map<String, Object> response = new HashMap<>();
 
         try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
-             CallableStatement stmt = conn.prepareCall("{call SP_INSERE_NIVEL_AGUA_PZ(?, ?, ?, ?)}")) {
+                CallableStatement stmt = conn.prepareCall("{call SP_INSERE_NIVEL_AGUA_PZ(?, ?, ?, ?, ?)}")) {
+
+            if (request.getColetor() == null || request.getColetor().trim().isEmpty()) {
+                response.put("status", "erro");
+                response.put("mensagem", "O campo coletor é obrigatório e não pode ser vazio");
+                return ResponseEntity.badRequest().body(response);
+            }
 
             stmt.setInt(1, request.getCdPiezometro());
 
@@ -194,9 +192,15 @@ public class InspecaoPiezometroMovimentoController {
                 stmt.setNull(4, java.sql.Types.VARCHAR);
             }
 
+            String coletorComSufixo = request.getColetor() + " via App";
+            stmt.setString(5, coletorComSufixo);
+
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
+
+            System.out.println("Procedimento PR preparado para: " + request.getCdPiezometro());
+            System.out.println("Coletor formatado: " + coletorComSufixo);
 
             response.put("status", "sucesso");
             response.put("mensagem", "Nível de água PR inserido com sucesso");
@@ -220,38 +224,22 @@ public class InspecaoPiezometroMovimentoController {
     }
 
     @PostMapping("/inserir-recurso-hidrico-pc-pv")
-    @Operation(summary = "Inserir recurso hídrico dos tipos PC e PV",
-            description = "Executa a procedure SP_INSERE_RECURSO_HIDRICO_PZ no banco Firebird Zeus para registrar um novo recurso hídrico de piezômetro dos tipos PC e PV. "
-                    + "Campos obrigatórios: cdPiezometro, dtInspecao, qtVazao")
+    @Operation(summary = "Inserir recurso hídrico dos tipos PC e PV", description = "Executa a procedure SP_INSERE_RECURSO_HIDRICO_PZ no banco Firebird Zeus para registrar um novo recurso hídrico de piezômetro dos tipos PC e PV. "
+            + "Campos obrigatórios: cdPiezometro, dtInspecao, qtVazao")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Recurso hídrico PC/PV inserido com sucesso",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição",
-                    content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados",
-                    content = @Content(mediaType = "application/json"))
+            @ApiResponse(responseCode = "200", description = "Recurso hídrico PC/PV inserido com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos na requisição", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Erro ao executar a procedure no banco de dados", content = @Content(mediaType = "application/json"))
     })
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Dados do recurso hídrico para piezômetros PC e PV",
-            required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = RecursoHidricoRequest.class),
-                    examples = @ExampleObject(
-                            name = "Exemplo PC/PV",
-                            summary = "Exemplo de recurso hídrico para PC/PV",
-                            description = "Exemplo de requisição para piezômetros dos tipos PC e PV",
-                            value = """
-                            {
-                              "cdPiezometro": 687,
-                              "dtInspecao": "11.12.2025",
-                              "qtVazao": 33,
-                              "observacao": "AAAAAAAAAAA"
-                            }
-                            """
-                    )
-            )
-    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do recurso hídrico para piezômetros PC e PV", required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = RecursoHidricoRequest.class), examples = @ExampleObject(name = "Exemplo PC/PV", summary = "Exemplo de recurso hídrico para PC/PV", description = "Exemplo de requisição para piezômetros dos tipos PC e PV", value = """
+            {
+              "cdPiezometro": 687,
+              "dtInspecao": "11.12.2025",
+              "qtVazao": 33,
+              "observacao": "AAAAAAAAAAA",
+              "coletor": "Matheus"
+            }
+            """)))
 
     public ResponseEntity<Map<String, Object>> inserirRecursoHidricoPCPV(
             @Valid @RequestBody RecursoHidricoRequest request) {
@@ -259,7 +247,13 @@ public class InspecaoPiezometroMovimentoController {
         Map<String, Object> response = new HashMap<>();
 
         try (Connection conn = DriverManager.getConnection(FIREBIRD_URL, FIREBIRD_USER, FIREBIRD_PASSWORD);
-             CallableStatement stmt = conn.prepareCall("{call SP_INSERE_RECURSO_HIDRICO_PZ(?, ?, ?, ?)}")) {
+                CallableStatement stmt = conn.prepareCall("{call SP_INSERE_RECURSO_HIDRICO_PZ(?, ?, ?, ?, ?)}")) {
+
+            if (request.getColetor() == null || request.getColetor().trim().isEmpty()) {
+                response.put("status", "erro");
+                response.put("mensagem", "O campo coletor é obrigatório e não pode ser vazio");
+                return ResponseEntity.badRequest().body(response);
+            }
 
             stmt.setInt(1, request.getCdPiezometro());
 
@@ -285,15 +279,15 @@ public class InspecaoPiezometroMovimentoController {
             stmt.setDate(2, sqlDate);
             stmt.setDouble(3, request.getQtVazao());
 
-            if (request.getObservacao() != null && !request.getObservacao().trim().isEmpty()) {
-                stmt.setString(4, request.getObservacao());
-            } else {
-                stmt.setNull(4, java.sql.Types.VARCHAR);
-            }
+            String coletorComSufixo = request.getColetor() + " via App";
+            stmt.setString(5, coletorComSufixo);
 
             conn.setAutoCommit(false);
             stmt.execute();
             conn.commit();
+
+            System.out.println("Procedimento PC/PV preparado para: " + request.getCdPiezometro());
+            System.out.println("Coletor formatado: " + coletorComSufixo);
 
             response.put("status", "sucesso");
             response.put("mensagem", "Recurso hídrico PC/PV inserido com sucesso");

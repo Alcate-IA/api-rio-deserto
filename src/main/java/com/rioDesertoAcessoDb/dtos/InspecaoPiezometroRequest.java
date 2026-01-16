@@ -23,18 +23,22 @@ public class InspecaoPiezometroRequest {
     private Double qtNivelEstatico;
 
     @Schema(description = "Observação da inspeção (opcional)", example = "Piezômetro com leitura atípica", nullable = true)
-    private String observacao; // NOVO CAMPO
+    private String observacao;
+
+    @Schema(description = "Nome do coletor", example = "Matheus")
+    private String coletor;
 
     public InspecaoPiezometroRequest() {
     }
 
     public InspecaoPiezometroRequest(Integer cdPiezometro, String dtInspecao, Double qtLeitura,
-                                     Double qtNivelEstatico, String observacao) { // ATUALIZADO
+            Double qtNivelEstatico, String observacao, String coletor) {
         this.cdPiezometro = cdPiezometro;
         this.dtInspecao = dtInspecao;
         this.qtLeitura = qtLeitura;
         this.qtNivelEstatico = qtNivelEstatico;
         this.observacao = observacao;
+        this.coletor = coletor;
     }
 
     public Integer getCdPiezometro() {
@@ -75,5 +79,13 @@ public class InspecaoPiezometroRequest {
 
     public void setObservacao(String observacao) {
         this.observacao = observacao;
+    }
+
+    public String getColetor() {
+        return coletor;
+    }
+
+    public void setColetor(String coletor) {
+        this.coletor = coletor;
     }
 }
