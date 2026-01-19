@@ -157,10 +157,16 @@ public class QualidadeAguaController {
                             FROM parametros_legislacao pl
                             JOIN analise a ON pl.id_analise = a.id_analise
                             WHERE pl.id_legislacao = ?
-                            AND a.id_analise IN (%s)
-                            """, placeholders);
+                            AND (
+                                a.id_analise IN (%s)
+                                OR TRIM(a.nome) IN (SELECT DISTINCT TRIM(nome) FROM analise WHERE id_analise IN (%s))
+                                OR a.simbolo IN (SELECT DISTINCT simbolo FROM analise WHERE id_analise IN (%s))
+                            )
+                            """, placeholders, placeholders, placeholders);
                     List<Object> paramListP = new ArrayList<>();
                     paramListP.add(idLegislacao);
+                    paramListP.addAll(filtros);
+                    paramListP.addAll(filtros);
                     paramListP.addAll(filtros);
                     paramsP = paramListP.toArray();
                 } else {
@@ -206,7 +212,7 @@ public class QualidadeAguaController {
                 INNER JOIN identificacao ide ON (aq.identificacao = ide.codigo)
                 WHERE ide.ID_ZEUS = ?
                   AND aq.DATA >= TO_DATE(?, 'DD/MM/YYYY')
-                  AND aq.DATA <= TO_DATE(?, 'DD/MM/YYYY')
+                  AND aq.DATA <= (DATE_TRUNC('MONTH', TO_DATE(?, 'DD/MM/YYYY')) + INTERVAL '1 MONTH - 1 day')
                 ORDER BY aq.N_REGISTRO
                 """;
 
@@ -249,14 +255,21 @@ public class QualidadeAguaController {
                             a.nome as nome_analise,
                             aaq.resultado
                         FROM amostraanalise_quimico aaq
-                        JOIN analise a ON aaq.simbolo = a.simbolo
+                        LEFT JOIN analise a ON aaq.simbolo = a.simbolo
                         WHERE aaq.N_REGISTRO = ?
-                        AND a.id_analise IN (%s)
+                        AND (
+                            a.id_analise IN (%1$s)
+                            OR TRIM(a.nome) IN (SELECT DISTINCT TRIM(nome) FROM analise WHERE id_analise IN (%1$s))
+                            OR a.simbolo IN (SELECT DISTINCT simbolo FROM analise WHERE id_analise IN (%1$s))
+                            OR a.id_analise IS NULL
+                        )
                         ORDER BY aaq.simbolo
                         """, placeholders);
 
                 List<Object> paramListA = new ArrayList<>();
                 paramListA.add(nRegistro);
+                paramListA.addAll(filtros);
+                paramListA.addAll(filtros);
                 paramListA.addAll(filtros);
                 paramsA = paramListA.toArray();
             } else {
