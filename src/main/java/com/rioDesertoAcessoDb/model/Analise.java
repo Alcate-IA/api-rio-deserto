@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 
 @Data
 @Entity
-@Table(name = "analise")
+@Table(name = "analise", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "simbolo", "laboratorio" })
+})
 public class Analise {
 
     @Id

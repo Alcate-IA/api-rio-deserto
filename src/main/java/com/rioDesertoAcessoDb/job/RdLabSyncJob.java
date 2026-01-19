@@ -26,8 +26,8 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
-     @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
-//     @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
+    @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
+    // @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
         System.out.println("Data/Hora: " + new Date());
@@ -68,7 +68,7 @@ public class RdLabSyncJob {
             return;
         }
 
-         inserirParametrosLegislacaoAposSync();
+        inserirParametrosLegislacaoAposSync();
 
         long fimTotal = System.currentTimeMillis();
         System.out.println("\n=== SINCORNIZAÇÃO CONCLUÍDA ===");
@@ -174,10 +174,10 @@ public class RdLabSyncJob {
             colunasPostgres.add(coluna.toLowerCase());
         }
 
-        // Se for tabela ANALISE, adicionar coluna id_analise
+        // Se for tabela ANALISE, NÃO adicionar id_analise manualmente.
+        // Vamos deixar o PostgreSQL gerar via IDENTITY/SERIAL.
         if (isTabelaAnalise) {
-            System.out.println("   [ANALISE] Adicionando coluna id_analise para geração automática");
-            colunasPostgres.add(0, "id_analise"); // Adiciona no início da lista
+            System.out.println("   [ANALISE] Usando id_analise auto-gerado pelo PostgreSQL para novos registros.");
         }
 
         // 2. Desabilitar constraints se for tabela pai
@@ -187,14 +187,19 @@ public class RdLabSyncJob {
         }
 
         // 3. Limpar tabela no PostgreSQL (TRUNCATE mais rápido que DELETE)
+        // EXCEÇÃO: Tabela ANALISE não deve ser limpa para preservar IDs
         long inicioLimpeza = System.currentTimeMillis();
-        try {
-            postgresJdbcTemplate.execute("TRUNCATE TABLE " + tabelaPostgres + " CASCADE");
-            System.out.println("   Limpeza: TRUNCATE em " + (System.currentTimeMillis() - inicioLimpeza) + "ms");
-        } catch (Exception e) {
-            System.err.println("   Aviso: Erro ao limpar com TRUNCATE, usando DELETE...");
-            postgresJdbcTemplate.update("DELETE FROM " + tabelaPostgres);
-            System.out.println("   Limpeza: DELETE em " + (System.currentTimeMillis() - inicioLimpeza) + "ms");
+        if (isTabelaAnalise) {
+            System.out.println("   [ANALISE] Pulando limpeza da tabela (modo incremental)");
+        } else {
+            try {
+                postgresJdbcTemplate.execute("TRUNCATE TABLE " + tabelaPostgres + " CASCADE");
+                System.out.println("   Limpeza: TRUNCATE em " + (System.currentTimeMillis() - inicioLimpeza) + "ms");
+            } catch (Exception e) {
+                System.err.println("   Aviso: Erro ao limpar com TRUNCATE, usando DELETE...");
+                postgresJdbcTemplate.update("DELETE FROM " + tabelaPostgres);
+                System.out.println("   Limpeza: DELETE em " + (System.currentTimeMillis() - inicioLimpeza) + "ms");
+            }
         }
 
         // 4. Preparar query de INSERT
@@ -202,12 +207,15 @@ public class RdLabSyncJob {
         String insertQuery = "INSERT INTO " + tabelaPostgres + " (" +
                 String.join(", ", colunasPostgres) + ") VALUES (" + placeholders + ")";
 
+        if (isTabelaAnalise) {
+            insertQuery += " ON CONFLICT (simbolo, laboratorio) DO NOTHING";
+        }
+
         // 5. STREAMING: Buscar e inserir simultaneamente
         long inicioMigracao = System.currentTimeMillis();
         int totalRegistros = 0;
         int totalInseridos = 0;
         int batchCount = 0;
-        int idAnaliseCounter = 1; // Contador para id_analise
         List<Object[]> batchArgs = new ArrayList<>(BATCH_SIZE);
 
         String selectQuery = "SELECT " + String.join(", ", colunasFirebird) + " FROM " + tabelaFirebird;
@@ -228,25 +236,10 @@ public class RdLabSyncJob {
                     totalRegistros++;
 
                     // Extrair valores da linha atual
-                    Object[] args;
-
-                    if (isTabelaAnalise) {
-                        // Para tabela ANALISE, criar array com espaço para id_analise
-                        args = new Object[columnCount + 1];
-                        args[0] = idAnaliseCounter++; // Preencher id_analise sequencial
-
-                        // Copiar demais valores do Firebird
-                        for (int i = 0; i < columnCount; i++) {
-                            Object value = rs.getObject(i + 1);
-                            args[i + 1] = tratarValor(value);
-                        }
-                    } else {
-                        // Para outras tabelas, processar normalmente
-                        args = new Object[columnCount];
-                        for (int i = 0; i < columnCount; i++) {
-                            Object value = rs.getObject(i + 1);
-                            args[i] = tratarValor(value);
-                        }
+                    Object[] args = new Object[columnCount];
+                    for (int i = 0; i < columnCount; i++) {
+                        Object value = rs.getObject(i + 1);
+                        args[i] = tratarValor(value);
                     }
 
                     batchArgs.add(args);
@@ -302,12 +295,12 @@ public class RdLabSyncJob {
             return null;
         } else if (value instanceof String) {
             String str = (String) value;
-//            try {
-//                // Tentar corrigir charset ISO-8859-1 -> UTF-8
-//                str = new String(str.getBytes("ISO-8859-1"), "UTF-8");
-//            } catch (Exception e) {
-//                // Ignora se falhar
-//            }
+            // try {
+            // // Tentar corrigir charset ISO-8859-1 -> UTF-8
+            // str = new String(str.getBytes("ISO-8859-1"), "UTF-8");
+            // } catch (Exception e) {
+            // // Ignora se falhar
+            // }
             return str.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "");
         }
         return value;
@@ -462,122 +455,66 @@ public class RdLabSyncJob {
 
         // Lista de parâmetros para inserir: {id_analise, id_legislacao, parametro}
         Object[][] parametros = {
-                {68, 1, "entre 5 e 9"},
-                {117, 1, "inferior a 40"},
-                {142, 1, "até 1"},
-                {139, 1, "remoção mínima de 60%"},
-                {473, 1, "máx 0,5"},
-                {474, 1, "máx 5,0"},
-                {516, 1, "máx 5,0"},
-                {171, 1, "máx 0,2"},
-                {156, 1, "máx 0,5"},
-                {519, 1, "máx 0,2"},
-                {224, 1, "máx 1,0"},
-                {114, 1, "máx 0,1"},
-                {520, 1, "máx 4,0"},
-                {197, 1, "máx 15,0"},
-                {184, 1, "máx 10,0"},
-                {223, 1, "máx 1,0"},
-                {476, 1, "máx 0,01"},
-                {546, 1, "máx 2,0"},
-                {316, 1, "máx 20,0"},
-                {170, 1, "máx 0,1"},
-                {472, 1, "máx 0,30"},
-                {596, 1, "máx 1,0"},
-                {165, 1, "máx 5,0"},
-                {137, 1, "máx 0,5"},
-                {151, 2, "máx 200"},
-                {473, 2, "máx 10"},
-                {474, 2, "máx 700"},
-                {516, 2, "máx 500"},
-                {171, 2, "máx 5"},
-                {156, 2, "máx 10"},
-                {519, 2, "máx 70"},
-                {83, 2, "máx 250000"},
-                {154, 2, "máx 2000"},
-                {475, 2, "máx 50"},
-                {162, 2, "máx 300"},
-                {184, 2, "máx 1500"},
-                {163, 2, "máx 100"},
-                {476, 2, "máx 1"},
-                {555, 2, "máx 70"},
-                {546, 2, "máx 20"},
-                {185, 2, "máx 10000"},
-                {149, 2, "máx 1000"},
-                {170, 2, "máx 100"},
-                {472, 2, "máx 10"},
-                {166, 2, "máx 200000"},
-                {141, 2, "máx 1000000"},
-                {110, 2, "máx 250000"},
-                {621, 2, "máx 50"},
-                {165, 2, "máx 5000"},
-                {137, 2, "máx 3"},
-                {109, 2, "Ausentes em 100 mL"},
-                {121, 2, "Ausentes em 100 mL"},
-                {151, 3, "máx 3500"},
-                {473, 3, "máx 10"},
-                {474, 3, "máx 700"},
-                {516, 3, "máx 500"},
-                {171, 3, "máx 5"},
-                {156, 3, "máx 10"},
-                {154, 3, "máx 2000"},
-                {475, 3, "máx 50"},
-                {162, 3, "máx 2450"},
-                {163, 3, "máx 400"},
-                {476, 3, "máx 1"},
-                {555, 3, "máx 70"},
-                {546, 3, "máx 20"},
-                {185, 3, "máx 10000"},
-                {170, 3, "máx 50"},
-                {472, 3, "máx 10"},
-                {165, 3, "máx 1050"},
-                {137, 3, "máx 140"},
-                {68, 4, "6,0 a 9,0"},
-                {131, 4, "mín 5,0"},
-                {139, 4, "máx 5,0"},
-                {144, 4, "máx 100"},
-                {204, 4, "máx 75"},
-                {121, 4, "máx 1.000 (em 80% das amostras)"},
-                {226, 4, "máx 0,1"},
-                {473, 4, "máx 0,01"},
-                {474, 4, "máx 0,7"},
-                {516, 4, "máx 0,5"},
-                {171, 4, "máx 0,001"},
-                {156, 4, "máx 0,01"},
-                {519, 4, "máx 0,005"},
-                {83, 4, "máx 250"},
-                {82, 4, "máx 0,01"},
-                {224, 4, "máx 0,009"},
-                {475, 4, "máx 0,05"},
-                {197, 4, "máx 0,3"},
-                {184, 4, "máx 1,4"},
-                {127, 4, "máx 0,030"},
-                {163, 4, "máx 0,1"},
-                {476, 4, "máx 0,0002"},
-                {546, 4, "máx 0,025"},
-                {185, 4, "máx 10,0"},
-                {149, 4, "máx 1,0"},
-                {316, 4, "máx 3,7 (pH ≤ 7,5)"},
-                {170, 4, "máx 0,01"},
-                {472, 4, "máx 0,01"},
-                {141, 4, "máx 500"},
-                {110, 4, "máx 250"},
-                {143, 4, "máx 0,002"},
-                {165, 4, "máx 0,18"},
-                {137, 4, "máx 0,003"},
-                {68, 5, "Entre 6,0 e 9,0"},
-                {146, 5, "30,0 mg/L"},
-                {114, 5, "0,1 mg/L"},
-                {154, 5, "0,5 mg/L"},
-                {171, 5, "0,1 mg/L"},
-                {476, 5, "0,005 mg/L"},
-                {546, 5, "1,0 mg/L"},
-                {165, 5, "1,0 mg/L"},
-                {473, 5, "0,1 mg/L"},
-                {170, 5, "0,02 mg/L"},
-                {472, 5, "0,02 mg/L"},
-                {223, 5, "1,0 mg/L"},
-                {137, 5, "0,2 mg/L"}
+                // Legislação 1: Resolução CONAMA nº 430/2011 (Lançamento de Efluentes)
+                { 508, 1, "0,5 mg/L As (Tabela I)" }, // Arsênio Total
+                { 169, 1, "5,0 mg/L Ba (Tabela I)" }, // Bário Total
+                { 512, 1, "0,2 mg/L Cd (Tabela I)" }, // Cádmio Total
+                { 513, 1, "0,5 mg/L Pb (Tabela I)" }, // Chumbo Total
+                { 220, 1, "1,0 mg/L Cu (Tabela I)" }, // Cobre Dissolvido
+                { 111, 1, "0,1 mg/L Cr+6 (Tabela I)" }, // Cromo Hexavalente
+                { 194, 1, "15,0 mg/L Fe (Tabela I)" }, // Ferro Dissolvido
+                { 181, 1, "10,0 mg/L F (Tabela I)" }, // Fluoreto Total
+                { 219, 1, "1,0 mg/L Mn (Tabela I)" }, // Manganês Dissolvido
+                { 510, 1, "0,01 mg/L Hg (Tabela I)" }, // Mercúrio Total
+                { 541, 1, "2,0 mg/L Ni (Tabela I)" }, // Níquel Total [cite: 626]
+                { 167, 1, "0,1 mg/L Ag (Tabela I)" }, // Prata Total [cite: 626]
+                { 657, 1, "0,30 mg/L Se (Tabela I)" }, // Selênio Total [cite: 626]
+                { 162, 1, "5,0 mg/L Zn (Tabela I)" }, // Zinco Total [cite: 626]
+                { 102, 1, "pH entre 5 a 9" }, // pH [cite: 613]
+                { 136, 1, "DBO 5 dias: remoção mínima de 60%" }, // DBO [cite: 623]
+                { 139, 1, "Materiais sedimentáveis: até 1 mL/L" }, // Resíduos Sedimentáveis [cite: 615]
+
+                // Legislação 2: Resolução CONAMA nº 396/2008 (Águas Subterrâneas - Consumo
+                // Humano)
+                { 148, 2, "200 µg/L (Anexo I)" }, // Alumínio [cite: 163]
+                { 508, 2, "10 µg/L (Anexo I)" }, // Arsênio [cite: 163]
+                { 169, 2, "700 µg/L (Anexo I)" }, // Bário [cite: 163]
+                { 512, 2, "5 µg/L (Anexo I)" }, // Cádmio [cite: 163]
+                { 513, 2, "10 µg/L (Anexo I)" }, // Chumbo [cite: 163]
+                { 151, 2, "2.000 µg/L (Anexo I)" }, // Cobre [cite: 163]
+                { 517, 2, "50 µg/L (Anexo I)" }, // Crômio [cite: 163]
+                { 181, 2, "1.500 µg/L (Anexo I)" }, // Fluoreto [cite: 163]
+                { 510, 2, "1 µg/L (Anexo I)" }, // Mercúrio [cite: 163]
+                { 182, 2, "10.000 µg/L N (Anexo I)" }, // Nitrato [cite: 163]
+                { 138, 2, "1.000.000 µg/L (Anexo I)" }, // Sólidos Dissolvidos Totais [cite: 163]
+
+                // Legislação 3: Resolução CONAMA nº 420/2009 (Investigação Água Subterrânea)
+                { 508, 3, "10 µg/L (Anexo II)" }, // Arsênio [cite: 453]
+                { 169, 3, "700 µg/L (Anexo II)" }, // Bário [cite: 453]
+                { 512, 3, "5 µg/L (Anexo II)" }, // Cádmio [cite: 453]
+                { 513, 3, "10 µg/L (Anexo II)" }, // Chumbo [cite: 453]
+                { 510, 3, "1 µg/L (Anexo II)" }, // Mercúrio [cite: 453]
+                { 134, 3, "140 µg/L (Anexo II)" }, // Fenol [cite: 455]
+                { 163, 3, "500.000 µg/L (Anexo II)" }, // Sódio (Xilenos ref.) [cite: 453]
+
+                // Legislação 4: Resolução CONAMA nº 357/2005 (Águas Doces Classe 1)
+                { 136, 4, "Até 3 mg/L O2" }, // DBO [cite: 1030]
+                { 128, 4, "Não inferior a 6 mg/L O2" }, // Oxigênio Dissolvido [cite: 1031]
+                { 141, 4, "Até 40 UNT" }, // Turbidez [cite: 1032]
+                { 102, 4, "6,0 a 9,0" }, // pH [cite: 1034]
+                { 138, 4, "500 mg/L (Tabela I)" }, // Sólidos Dissolvidos Totais [cite: 1036]
+                { 508, 4, "0,01 mg/L As (Tabela I)" }, // Arsênio Total [cite: 1036]
+
+                // Legislação 5: Consema Nº 181/2021 (Lançamento de Efluentes - Santa Catarina)
+                { 102, 5, "pH entre 6,0 e 9,0" }, // pH [cite: 758]
+                { 111, 5, "0,1 mg/L" }, // Cromo Hexavalente [cite: 766]
+                { 151, 5, "0,5 mg/L" }, // Cobre Total [cite: 767]
+                { 512, 5, "0,1 mg/L" }, // Cádmio Total [cite: 768]
+                { 510, 5, "0,005 mg/L" }, // Mercúrio Total [cite: 769]
+                { 162, 5, "1,0 mg/L" }, // Zinco Total [cite: 771]
+                { 508, 5, "0,1 mg/L" }, // Arsênio Total [cite: 772]
+                { 136, 5, "Máximo 60 mg/L DBO" }, // DBO [cite: 792]
+                { 143, 5, "Gorduras Animais: 30,0 mg/L" }, // Óleos e Graxas [cite: 764]
         };
 
         // Primeiro, limpar a tabela existente (opcional - comente se não quiser limpar)
