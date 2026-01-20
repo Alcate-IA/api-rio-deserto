@@ -456,54 +456,54 @@ public class RdLabSyncJob {
         // Lista de parâmetros para inserir: {id_analise, id_legislacao, parametro}
         Object[][] parametros = {
                 // Legislação 1: Resolução CONAMA nº 430/2011 (Lançamento de Efluentes)
-                { 508, 1, "0,5 mg/L As (Tabela I)" }, // Arsênio Total
-                { 169, 1, "5,0 mg/L Ba (Tabela I)" }, // Bário Total
-                { 512, 1, "0,2 mg/L Cd (Tabela I)" }, // Cádmio Total
-                { 513, 1, "0,5 mg/L Pb (Tabela I)" }, // Chumbo Total
-                { 220, 1, "1,0 mg/L Cu (Tabela I)" }, // Cobre Dissolvido
-                { 111, 1, "0,1 mg/L Cr+6 (Tabela I)" }, // Cromo Hexavalente
-                { 194, 1, "15,0 mg/L Fe (Tabela I)" }, // Ferro Dissolvido
-                { 181, 1, "10,0 mg/L F (Tabela I)" }, // Fluoreto Total
-                { 219, 1, "1,0 mg/L Mn (Tabela I)" }, // Manganês Dissolvido
-                { 510, 1, "0,01 mg/L Hg (Tabela I)" }, // Mercúrio Total
-                { 541, 1, "2,0 mg/L Ni (Tabela I)" }, // Níquel Total [cite: 626]
-                { 167, 1, "0,1 mg/L Ag (Tabela I)" }, // Prata Total [cite: 626]
-                { 657, 1, "0,30 mg/L Se (Tabela I)" }, // Selênio Total [cite: 626]
-                { 162, 1, "5,0 mg/L Zn (Tabela I)" }, // Zinco Total [cite: 626]
+                { 508, 1, "0,5 mg/L" }, // Arsênio Total
+                { 169, 1, "5,0 mg/L" }, // Bário Total
+                { 512, 1, "0,2 mg/L " }, // Cádmio Total
+                { 513, 1, "0,5 mg/L" }, // Chumbo Total
+                { 220, 1, "1,0 mg/L" }, // Cobre Dissolvido
+                { 111, 1, "0,1 mg/L" }, // Cromo Hexavalente
+                { 194, 1, "15,0 mg/L" }, // Ferro Dissolvido
+                { 181, 1, "10,0 mg/L" }, // Fluoreto Total
+                { 219, 1, "1,0 mg/L" }, // Manganês Dissolvido
+                { 510, 1, "0,01 mg/L" }, // Mercúrio Total
+                { 541, 1, "2,0 mg/L" }, // Níquel Total [cite: 626]
+                { 167, 1, "0,1 mg/L" }, // Prata Total [cite: 626]
+                { 657, 1, "0,30 mg/L" }, // Selênio Total [cite: 626]
+                { 162, 1, "5,0 mg/L" }, // Zinco Total [cite: 626]
                 { 102, 1, "pH entre 5 a 9" }, // pH [cite: 613]
                 { 136, 1, "DBO 5 dias: remoção mínima de 60%" }, // DBO [cite: 623]
                 { 139, 1, "Materiais sedimentáveis: até 1 mL/L" }, // Resíduos Sedimentáveis [cite: 615]
 
                 // Legislação 2: Resolução CONAMA nº 396/2008 (Águas Subterrâneas - Consumo
                 // Humano)
-                { 148, 2, "200 µg/L (Anexo I)" }, // Alumínio [cite: 163]
-                { 508, 2, "10 µg/L (Anexo I)" }, // Arsênio [cite: 163]
-                { 169, 2, "700 µg/L (Anexo I)" }, // Bário [cite: 163]
-                { 512, 2, "5 µg/L (Anexo I)" }, // Cádmio [cite: 163]
-                { 513, 2, "10 µg/L (Anexo I)" }, // Chumbo [cite: 163]
-                { 151, 2, "2.000 µg/L (Anexo I)" }, // Cobre [cite: 163]
-                { 517, 2, "50 µg/L (Anexo I)" }, // Crômio [cite: 163]
-                { 181, 2, "1.500 µg/L (Anexo I)" }, // Fluoreto [cite: 163]
-                { 510, 2, "1 µg/L (Anexo I)" }, // Mercúrio [cite: 163]
-                { 182, 2, "10.000 µg/L N (Anexo I)" }, // Nitrato [cite: 163]
-                { 138, 2, "1.000.000 µg/L (Anexo I)" }, // Sólidos Dissolvidos Totais [cite: 163]
+                { 148, 2, "200 µg/L" }, // Alumínio [cite: 163]
+                { 508, 2, "10 µg/L" }, // Arsênio [cite: 163]
+                { 169, 2, "700 µg/L" }, // Bário [cite: 163]
+                { 512, 2, "5 µg/L" }, // Cádmio [cite: 163]
+                { 513, 2, "10 µg/L" }, // Chumbo [cite: 163]
+                { 151, 2, "2.000 µg/L" }, // Cobre [cite: 163]
+                { 517, 2, "50 µg/L" }, // Crômio [cite: 163]
+                { 181, 2, "1.500 µg/L" }, // Fluoreto [cite: 163]
+                { 510, 2, "1 µg/L" }, // Mercúrio [cite: 163]
+                { 182, 2, "10.000 µg/L" }, // Nitrato [cite: 163]
+                { 138, 2, "1.000.000 µg/L" }, // Sólidos Dissolvidos Totais [cite: 163]
 
                 // Legislação 3: Resolução CONAMA nº 420/2009 (Investigação Água Subterrânea)
-                { 508, 3, "10 µg/L (Anexo II)" }, // Arsênio [cite: 453]
-                { 169, 3, "700 µg/L (Anexo II)" }, // Bário [cite: 453]
-                { 512, 3, "5 µg/L (Anexo II)" }, // Cádmio [cite: 453]
-                { 513, 3, "10 µg/L (Anexo II)" }, // Chumbo [cite: 453]
-                { 510, 3, "1 µg/L (Anexo II)" }, // Mercúrio [cite: 453]
-                { 134, 3, "140 µg/L (Anexo II)" }, // Fenol [cite: 455]
-                { 163, 3, "500.000 µg/L (Anexo II)" }, // Sódio (Xilenos ref.) [cite: 453]
+                { 508, 3, "10 µg/L" }, // Arsênio [cite: 453]
+                { 169, 3, "700 µg/L" }, // Bário [cite: 453]
+                { 512, 3, "5 µg/L" }, // Cádmio [cite: 453]
+                { 513, 3, "10 µg/L" }, // Chumbo [cite: 453]
+                { 510, 3, "1 µg/L" }, // Mercúrio [cite: 453]
+                { 134, 3, "140 µg/L" }, // Fenol [cite: 455]
+                { 163, 3, "500.000 µg/L" }, // Sódio (Xilenos ref.) [cite: 453]
 
                 // Legislação 4: Resolução CONAMA nº 357/2005 (Águas Doces Classe 1)
-                { 136, 4, "Até 3 mg/L O2" }, // DBO [cite: 1030]
-                { 128, 4, "Não inferior a 6 mg/L O2" }, // Oxigênio Dissolvido [cite: 1031]
+                { 136, 4, "Até 3 mg/L" }, // DBO [cite: 1030]
+                { 128, 4, "Não inferior a 6 mg/L" }, // Oxigênio Dissolvido [cite: 1031]
                 { 141, 4, "Até 40 UNT" }, // Turbidez [cite: 1032]
                 { 102, 4, "6,0 a 9,0" }, // pH [cite: 1034]
-                { 138, 4, "500 mg/L (Tabela I)" }, // Sólidos Dissolvidos Totais [cite: 1036]
-                { 508, 4, "0,01 mg/L As (Tabela I)" }, // Arsênio Total [cite: 1036]
+                { 138, 4, "500 mg/L" }, // Sólidos Dissolvidos Totais [cite: 1036]
+                { 508, 4, "0,01 mg/L As" }, // Arsênio Total [cite: 1036]
 
                 // Legislação 5: Consema Nº 181/2021 (Lançamento de Efluentes - Santa Catarina)
                 { 102, 5, "pH entre 6,0 e 9,0" }, // pH [cite: 758]
