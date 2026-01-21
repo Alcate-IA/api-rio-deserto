@@ -124,23 +124,47 @@ public class AvaliacaoAnaliseIaNivelEstaticoController {
                 return errorResponse("Erro de validação", "A nota deve ser um número de 1 a 10");
             }
 
-            service.save(avaliacao);
+            AvaliacaoAnaliseIaNivelEstatico avaliacaoSalva = service.save(avaliacao);
+
+            // WEBHOOK SIMPLES - igual à primeira função
+            String webhookUrl = "http://192.168.100.95:5678/webhook/recebe_analises_rag";
+
+            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(90000);
+            factory.setReadTimeout(90000);
+
+            RestTemplate restTemplate = new RestTemplate(factory);
+
+            try {
+                ResponseEntity<Object> webhookResponse = restTemplate.postForEntity(
+                        webhookUrl, avaliacaoSalva, Object.class);
+
+            } catch (Exception e) {
+                System.out.println("Erro ao enviar webhook: " + e.getMessage());
+                e.printStackTrace();
+            }
+
             response.put("title", "Avaliação enviada!");
             response.put("text", "Obrigado pelo seu feedback.");
             return ResponseEntity.ok(response);
+
         } catch (DataIntegrityViolationException e) {
+            System.out.println("Erro de integridade de dados: " + e.getMessage());
             return errorResponse("Erro ao salvar", "esse piezometro não existe");
         } catch (Exception e) {
+            System.out.println("Erro geral ao salvar avaliação: " + e.getMessage());
+            e.printStackTrace();
             return errorResponse("Erro ao salvar",
                     "Não foi possível enviar sua avaliação no momento. Contate-nos se o erro permitir");
         }
     }
 
+    // Método auxiliar para respostas de erro
     private ResponseEntity<Map<String, String>> errorResponse(String title, String text) {
-        Map<String, String> response = new HashMap<>();
-        response.put("title", title);
-        response.put("text", text);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("title", title);
+        errorResponse.put("text", text);
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
