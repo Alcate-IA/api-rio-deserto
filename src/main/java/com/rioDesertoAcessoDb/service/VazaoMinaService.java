@@ -22,7 +22,6 @@ public class VazaoMinaService {
     public Map<String, Object> getVazaoData() {
         Map<String, Object> response = new HashMap<>();
 
-        // Obter estatísticas da primeira query
         Map<String, Object> estatisticas = vazaoMinaRepository.findEstatisticasVazao();
 
         if (estatisticas != null && !estatisticas.isEmpty()) {
@@ -31,15 +30,11 @@ public class VazaoMinaService {
             response.put("resultado", new HashMap<>());
         }
 
-        // Obter análise sazonal da nova query
         Map<String, Object> analisesSazonais = vazaoMinaRepository.findTendenciaSazonalVazao();
 
-        // Converter o JSON string para objeto se necessário
         if (analisesSazonais != null && !analisesSazonais.isEmpty()) {
-            // CRIAR UMA CÓPIA MUTÁVEL do Map retornado pelo JPA
             Map<String, Object> analisesSazonaisMutavel = new HashMap<>(analisesSazonais);
 
-            // Processar historico_variacoes
             List<Map<String, Object>> historicoList = new ArrayList<>();
 
             if (analisesSazonaisMutavel.get("historico_variacoes") instanceof String) {
@@ -56,13 +51,10 @@ public class VazaoMinaService {
                 historicoList = (List<Map<String, Object>>) analisesSazonaisMutavel.get("historico_variacoes");
             }
 
-            // Calcular estatísticas dos dados
             Map<String, Object> dadosAnalise = calcularEstatisticasTendencia(historicoList);
 
-            // Adicionar o histórico processado
             dadosAnalise.put("historico", historicoList);
 
-            // Remover o campo original e adicionar o novo estrutura
             analisesSazonaisMutavel.remove("historico_variacoes");
             analisesSazonaisMutavel.put("dados", dadosAnalise);
 
@@ -71,7 +63,6 @@ public class VazaoMinaService {
             response.put("analisesSazonais", new HashMap<>());
         }
 
-        // Obter histórico completo da segunda query
         List<Object[]> historico = vazaoMinaRepository.findHistoricoCompleto();
         List<Map<String, Object>> historicoFormatado = historico.stream()
                 .map(registro -> {
@@ -85,7 +76,6 @@ public class VazaoMinaService {
 
         response.put("historicoCompleto", historicoFormatado);
 
-        // Chamar o webhook com o histórico completo
         Map<String, Object> analiseIa = chamarWebhookAnalise(historicoFormatado);
         response.put("analiseIa", analiseIa);
 
