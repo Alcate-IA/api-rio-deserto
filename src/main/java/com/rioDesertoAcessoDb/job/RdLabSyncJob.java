@@ -27,7 +27,7 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
     @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
-    // @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
+//     @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
         System.out.println("Data/Hora: " + new Date());
@@ -456,23 +456,40 @@ public class RdLabSyncJob {
         // Lista de parâmetros para inserir: {id_analise, id_legislacao, parametro}
         Object[][] parametros = {
                 // Legislação 1: Resolução CONAMA nº 430/2011 (Lançamento de Efluentes)
-                { 508, 1, "0,5 mg/L" }, // Arsênio Total
-                { 169, 1, "5,0 mg/L" }, // Bário Total
-                { 512, 1, "0,2 mg/L " }, // Cádmio Total
-                { 513, 1, "0,5 mg/L" }, // Chumbo Total
-                { 220, 1, "1,0 mg/L" }, // Cobre Dissolvido
-                { 111, 1, "0,1 mg/L" }, // Cromo Hexavalente
-                { 194, 1, "15,0 mg/L" }, // Ferro Dissolvido
-                { 181, 1, "10,0 mg/L" }, // Fluoreto Total
-                { 219, 1, "1,0 mg/L" }, // Manganês Dissolvido
-                { 510, 1, "0,01 mg/L" }, // Mercúrio Total
-                { 541, 1, "2,0 mg/L" }, // Níquel Total [cite: 626]
-                { 167, 1, "0,1 mg/L" }, // Prata Total [cite: 626]
-                { 657, 1, "0,30 mg/L" }, // Selênio Total [cite: 626]
-                { 162, 1, "5,0 mg/L" }, // Zinco Total [cite: 626]
-                { 102, 1, "pH entre 5 a 9" }, // pH [cite: 613]
-                { 136, 1, "DBO 5 dias: remoção mínima de 60%" }, // DBO [cite: 623]
-                { 139, 1, "Materiais sedimentáveis: até 1 mL/L" }, // Resíduos Sedimentáveis [cite: 615]
+
+
+                //V1: -------------------------------------
+//                { 508, 1, "0,5 mg/L" }, // Arsênio Total
+//                { 169, 1, "5,0 mg/L" }, // Bário Total
+//                { 512, 1, "0,2 mg/L " }, // Cádmio Total
+//                { 513, 1, "0,5 mg/L" }, // Chumbo Total
+//                { 220, 1, "1,0 mg/L" }, // Cobre Dissolvido
+//                { 111, 1, "0,1 mg/L" }, // Cromo Hexavalente
+//                { 194, 1, "15,0 mg/L" }, // Ferro Dissolvido
+//                { 181, 1, "10,0 mg/L" }, // Fluoreto Total
+//                { 219, 1, "1,0 mg/L" }, // Manganês Dissolvido
+//                { 510, 1, "0,01 mg/L" }, // Mercúrio Total
+//                { 541, 1, "2,0 mg/L" }, // Níquel Total [cite: 626]
+//                { 167, 1, "0,1 mg/L" }, // Prata Total [cite: 626]
+//                { 657, 1, "0,30 mg/L" }, // Selênio Total [cite: 626]
+//                { 162, 1, "5,0 mg/L" }, // Zinco Total [cite: 626]
+//                { 102, 1, "pH entre 5 a 9" }, // pH [cite: 613]
+//                { 136, 1, "DBO 5 dias: remoção mínima de 60%" }, // DBO [cite: 623]
+//                { 139, 1, "Materiais sedimentáveis: até 1 mL/L" }, // Resíduos Sedimentáveis [cite: 615]
+                // -------------------------------------
+
+
+
+                { 114, 1, "40°C max" }, // Temperatura 40 graus máx -
+                { 102, 1, "5,0 a 9,0" }, //pH 5 - 9
+                { 139, 1, "1 mL/L" }, //Residuos Sedimentaveis 1 mL/L
+                { 194, 1, "15 mg/L max" }, //Ferro Dissolvido
+                { 219, 1, "1 mg/L max" }, //Manganês dissolvido
+                { 220, 1, "1 mg/L max" }, //Cobre dissolvido
+                { 162, 1, "5 mg/L max" }, //Zinco total
+                { 143, 1, "20 mg/L max" }, //Óleo e Graxas
+                { 136, 1, "120 mg/L máx" }, //Demanda bioquimica de oxigênio
+
 
                 // Legislação 2: Resolução CONAMA nº 396/2008 (Águas Subterrâneas - Consumo
                 // Humano)
@@ -506,15 +523,26 @@ public class RdLabSyncJob {
                 { 508, 4, "0,01 mg/L As" }, // Arsênio Total [cite: 1036]
 
                 // Legislação 5: Consema Nº 181/2021 (Lançamento de Efluentes - Santa Catarina)
-                { 102, 5, "pH entre 6,0 e 9,0" }, // pH [cite: 758]
-                { 111, 5, "0,1 mg/L" }, // Cromo Hexavalente [cite: 766]
-                { 151, 5, "0,5 mg/L" }, // Cobre Total [cite: 767]
-                { 512, 5, "0,1 mg/L" }, // Cádmio Total [cite: 768]
-                { 510, 5, "0,005 mg/L" }, // Mercúrio Total [cite: 769]
-                { 162, 5, "1,0 mg/L" }, // Zinco Total [cite: 771]
-                { 508, 5, "0,1 mg/L" }, // Arsênio Total [cite: 772]
-                { 136, 5, "Máximo 60 mg/L DBO" }, // DBO [cite: 792]
-                { 143, 5, "Gorduras Animais: 30,0 mg/L" }, // Óleos e Graxas [cite: 764]
+
+                //V1: -----------------------------
+//                { 102, 5, "pH entre 6,0 e 9,0" }, // pH [cite: 758]
+//                { 111, 5, "0,1 mg/L" }, // Cromo Hexavalente [cite: 766]
+//                { 151, 5, "0,5 mg/L" }, // Cobre Total [cite: 767]
+//                { 512, 5, "0,1 mg/L" }, // Cádmio Total [cite: 768]
+//                { 510, 5, "0,005 mg/L" }, // Mercúrio Total [cite: 769]
+//                { 162, 5, "1,0 mg/L" }, // Zinco Total [cite: 771]
+//                { 508, 5, "0,1 mg/L" }, // Arsênio Total [cite: 772]
+//                { 136, 5, "Máximo 60 mg/L DBO" }, // DBO [cite: 792]
+//                { 143, 5, "Gorduras Animais: 30,0 mg/L" }, // Óleos e Graxas [cite: 764]
+//                V1: ---------------------------------------------------------------
+
+                //V2: ---------------------------
+                { 102, 5, "5,0 a 9,0" }, //pH 5 - 9
+                { 219, 5, "1 mg/L max" }, //Manganês dissolvido 1mg/L 219
+                { 151, 5, "1 mg/L max" }, // Cobre Total  1mg/L
+                { 162, 5, "1 mg/L max" }, // zinco total  1mg/L
+                //V2: ---------------------------
+
         };
 
         // Primeiro, limpar a tabela existente (opcional - comente se não quiser limpar)
