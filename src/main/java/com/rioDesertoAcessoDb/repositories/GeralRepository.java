@@ -10,7 +10,26 @@ public class GeralRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Long getContadoresZeus() {
+    public Long getContadoresZeusTotais() {
+        String sql = "SELECT count(*) FROM tb_piezometro WHERE cd_empresa = 18";
+        try {
+            return jdbcTemplate.queryForObject(sql, Long.class);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public Long getContadoresRdLabTotais() {
+        String sql = "SELECT count(ide.*) FROM identificacao ide " +
+                "JOIN tb_piezometro pie ON pie.cd_piezometro = ide.id_zeus WHERE pie.cd_empresa = 18";
+        try {
+            return jdbcTemplate.queryForObject(sql, Long.class);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public Long getContadoresZeusAtivos() {
         String sql = "SELECT count(*) FROM tb_piezometro WHERE cd_empresa = 18 and fg_situacao = 'A'";
         try {
             return jdbcTemplate.queryForObject(sql, Long.class);
@@ -19,9 +38,28 @@ public class GeralRepository {
         }
     }
 
-    public Long getContadoresRdLab() {
+    public Long getContadoresRdLabAtivos() {
         String sql = "SELECT count(ide.*) FROM identificacao ide " +
                 "JOIN tb_piezometro pie ON pie.cd_piezometro = ide.id_zeus WHERE pie.cd_empresa = 18 and pie.fg_situacao = 'A'";
+        try {
+            return jdbcTemplate.queryForObject(sql, Long.class);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public Long getContadoresZeusInativos() {
+        String sql = "SELECT count(*) FROM tb_piezometro WHERE cd_empresa = 18 and fg_situacao = 'I'";
+        try {
+            return jdbcTemplate.queryForObject(sql, Long.class);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public Long getContadoresRdLabInativos() {
+        String sql = "SELECT count(ide.*) FROM identificacao ide " +
+                "JOIN tb_piezometro pie ON pie.cd_piezometro = ide.id_zeus WHERE pie.cd_empresa = 18 and pie.fg_situacao = 'I'";
         try {
             return jdbcTemplate.queryForObject(sql, Long.class);
         } catch (Exception e) {

@@ -16,11 +16,23 @@ public class GeralService {
     public Map<String, Long> getContadores() {
         Map<String, Long> contadores = new HashMap<>();
 
-        Long contadoresZeus = geralRepository.getContadoresZeus();
-        Long contadoresRdLab = geralRepository.getContadoresRdLab();
+        Long contadoresZeus = geralRepository.getContadoresZeusTotais();
+        Long contadoresRdLab = geralRepository.getContadoresRdLabTotais();
+
+        Long contadoresZeusAtivos = geralRepository.getContadoresZeusAtivos();
+        Long contadoresRdLabAtivos = geralRepository.getContadoresRdLabAtivos();
+
+        Long contadoresZeusInativos = geralRepository.getContadoresZeusInativos();
+        Long contadoresRdLabInativos = geralRepository.getContadoresRdLabInativos();
 
         contadores.put("contadoresZeus", contadoresZeus);
         contadores.put("contadoresRdLab", contadoresRdLab);
+
+        contadores.put("contadoresZeusAtivos", contadoresZeusAtivos);
+        contadores.put("contadoresRdLabAtivos", contadoresRdLabAtivos);
+
+        contadores.put("contadoresZeusInativos", contadoresZeusInativos);
+        contadores.put("contadoresRdLabInativos", contadoresRdLabInativos);
 
         return contadores;
     }
