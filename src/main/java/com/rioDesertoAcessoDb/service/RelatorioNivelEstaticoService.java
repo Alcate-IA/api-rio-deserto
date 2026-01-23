@@ -1,9 +1,11 @@
 package com.rioDesertoAcessoDb.service;
 
+import com.rioDesertoAcessoDb.dtos.AcaoUsuarioDTO;
 import com.rioDesertoAcessoDb.repositories.PiezometroRepository;
 import com.rioDesertoAcessoDb.repositories.RelatorioNivelEstaticoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +19,9 @@ public class RelatorioNivelEstaticoService {
 
         @Autowired
         private RelatorioNivelEstaticoRepository relatorioNivelEstaticoRepository;
+
+        @Autowired
+        private AcaoUsuarioService acaoUsuarioService;
 
         public List<Map<String, Object>> getDadosPiezometroComFiltro(Integer cdPiezometro, String mesAnoInicio,
                         String mesAnoFim) {
@@ -45,6 +50,11 @@ public class RelatorioNivelEstaticoService {
 
         public Map<String, Object> getDadosPiezometroComFiltroEHistorico(Integer cdPiezometro, String mesAnoInicio,
                         String mesAnoFim) {
+                return getDadosPiezometroComFiltroEHistorico(cdPiezometro, mesAnoInicio, mesAnoFim, null);
+        }
+
+        public Map<String, Object> getDadosPiezometroComFiltroEHistorico(Integer cdPiezometro, String mesAnoInicio,
+                        String mesAnoFim, String idUsuario) {
                 // Verifica o tipo do piezômetro
                 String tipoPiezometro = piezometroRepository.findTipoPiezometroById(cdPiezometro);
 
@@ -88,6 +98,14 @@ public class RelatorioNivelEstaticoService {
                 Map<String, Object> response = new HashMap<>();
                 response.put("dadosFiltrados", dadosFiltrados);
                 response.put("historicoCompleto", historicoCompleto);
+
+                //preciso chamar o repositorio do tracker aqui
+                if (idUsuario != null) {
+                        AcaoUsuarioDTO acaoDto = new AcaoUsuarioDTO();
+                        acaoDto.setUsuarioId(idUsuario);
+                        acaoDto.setAcao("Gerou relatório para o piezômetro: " + cdPiezometro);
+                        acaoUsuarioService.salvarAcao(acaoDto);
+                }
 
                 return response;
         }

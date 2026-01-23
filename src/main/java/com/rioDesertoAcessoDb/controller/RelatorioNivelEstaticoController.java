@@ -43,9 +43,10 @@ public class RelatorioNivelEstaticoController {
         public Map<String, Object> getDadosPiezometroComFiltroEHistorico(
                         @PathVariable Integer cdPiezometro,
                         @RequestParam String mesAnoInicio,
-                        @RequestParam String mesAnoFim) {
+                        @RequestParam String mesAnoFim,
+                        @RequestParam(required = false) String userId) {
                 return relatorioNivelEstaticoService.getDadosPiezometroComFiltroEHistorico(cdPiezometro, mesAnoInicio,
-                                mesAnoFim);
+                                mesAnoFim, userId);
         }
 
         @GetMapping("/piezometro/{cdPiezometro}/diario")
