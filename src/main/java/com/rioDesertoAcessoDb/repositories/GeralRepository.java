@@ -156,4 +156,30 @@ public class GeralRepository {
             return new java.util.HashMap<>();
         }
     }
+
+    public java.util.List<java.util.Map<String, Object>> getDadosVazaoXPrecipitacao() {
+        String sql = """
+                SELECT
+                    v.mes_ano_vazao AS mes_ano,
+                    v.vazao_bombeamento AS vazao_bombeamento,
+                    p.precipitacao_total AS precipitacao
+                FROM
+                    tb_vazao_mina v
+                LEFT JOIN (
+                    SELECT
+                        DATE_TRUNC('month', dt_item)::date AS mes_ano,
+                        SUM(vl_precipitacao) AS precipitacao_total
+                    FROM tb_meteorologia_item
+                    WHERE cd_meteorologia = 12
+                    GROUP BY DATE_TRUNC('month', dt_item)
+                ) p ON DATE_TRUNC('month', v.mes_ano_vazao)::date = p.mes_ano
+                ORDER BY v.mes_ano_vazao ASC
+                """;
+        try {
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new java.util.ArrayList<>();
+        }
+    }
 }

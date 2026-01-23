@@ -83,11 +83,14 @@ public class GeralService {
                     }
                 }
             } catch (Exception e) {
-                // Ignore errors to ensure list is returned even if stats fail
                 e.printStackTrace();
             }
         }
 
         return movimentos;
+    }
+
+    public java.util.List<java.util.Map<String, Object>> getDadosVazaoXPrecipitacao() {
+        return geralRepository.getDadosVazaoXPrecipitacao();
     }
 }

@@ -57,4 +57,15 @@ public class GeralController {
                 java.util.List<java.util.Map<String, Object>> movimentos = geralService.getUltimosMovimentosSistema();
                 return ResponseEntity.ok(movimentos);
         }
+
+        @Operation(summary = "Obter dados para o gráfico de vazão x precipitação", description = "Retorna uma lista de dados mensais contendo vazão de bombeamento e precipitação")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Dados obtidos com sucesso", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = java.util.List.class))),
+                        @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+        @GetMapping(value = "/grafico-vazao-x-precipitacao", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getDadosVazaoXPrecipitacao() {
+                java.util.List<java.util.Map<String, Object>> dados = geralService.getDadosVazaoXPrecipitacao();
+                return ResponseEntity.ok(dados);
+        }
 }
