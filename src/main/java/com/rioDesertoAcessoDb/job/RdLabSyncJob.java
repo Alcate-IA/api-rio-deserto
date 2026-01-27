@@ -26,8 +26,8 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
-    @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
-    // @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
+    // @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
+    @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
         System.out.println("Data/Hora: " + new Date());
@@ -696,7 +696,15 @@ public class RdLabSyncJob {
                 { 245, 5231 }, { 263, 3800 }, { 269, 4299 }, { 275, 3975 }, { 344, 3624 },
                 { 348, 3334 }, { 294, 5232 }, { 295, 5233 }, { 296, 5234 }, { 297, 5118 },
                 { 298, 5119 }, { 299, 5124 }, { 300, 5423 }, { 301, 5425 }, { 303, 5333 },
-                { 304, 5334 }
+                { 304, 5334 },
+
+//               garimpei os que a cibele fez e:
+
+                {91, 1470}, {92, 1471}, {94, 1473}, {96, 1474},
+                {97, 1475}, {98, 1476}, {101, 1669}, {102, 1597},
+                {122, 1482}, {125, 6115}, {126, 6116}, {128, 3809},
+                {175, 2609}, {187, 1703}, {143, 4131}, {220, 2435},
+                {221, 2436}, {247, 3808}
         };
 
         String sql = "UPDATE identificacao SET id_zeus = ? WHERE codigo = ?";
