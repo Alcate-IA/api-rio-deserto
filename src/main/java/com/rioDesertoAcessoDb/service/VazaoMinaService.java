@@ -1,9 +1,13 @@
 package com.rioDesertoAcessoDb.service;
 
+import com.rioDesertoAcessoDb.dtos.VazaoMinaRequest;
+import com.rioDesertoAcessoDb.model.VazaoMina;
 import com.rioDesertoAcessoDb.repositories.VazaoMinaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -17,6 +21,13 @@ public class VazaoMinaService {
         this.vazaoMinaRepository = vazaoMinaRepository;
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
+    }
+
+    public VazaoMina criar(VazaoMinaRequest request) {
+        VazaoMina vazaoMina = new VazaoMina();
+        vazaoMina.setMesAnoVazao(LocalDate.of(request.getAno(), request.getMes(), 1));
+        vazaoMina.setVazaoBombeamento(request.getVazaoBombeamento());
+        return vazaoMinaRepository.save(vazaoMina);
     }
 
     public Map<String, Object> getVazaoData() {
