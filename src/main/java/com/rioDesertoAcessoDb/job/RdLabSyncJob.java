@@ -26,8 +26,8 @@ public class RdLabSyncJob {
     private static final String FIREBIRD_USER = "ALCATEIA";
     private static final String FIREBIRD_PASSWORD = "8D5Z9s2F";
 
-    @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
-    // @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
+//    @Scheduled(cron = "0 0 4 * * MON-FRI", zone = "America/Sao_Paulo")
+     @Scheduled(fixedDelay = 500000000, initialDelay = 6000)
     public void sincronizarDadosRdLab() {
         System.out.println("=== SINCRONIZAÇÃO DE DADOS RD LAB ===");
         System.out.println("Data/Hora: " + new Date());
@@ -704,7 +704,14 @@ public class RdLabSyncJob {
                 {97, 1475}, {98, 1476}, {101, 1669}, {102, 1597},
                 {122, 1482}, {125, 6115}, {126, 6116}, {128, 3809},
                 {175, 2609}, {187, 1703}, {143, 4131}, {220, 2435},
-                {221, 2436}, {247, 3808}
+                {221, 2436}, {247, 3808},
+
+//               GARIMPEI O QUE FIZ
+
+                {363, 1670}, {364, 1483}, {373, 4982}, {426, 2254},
+                {445, 3662}, {475, 2556}, {441, 2780}, {494, 3117},
+                {509, 3176}, {664, 5079}, {597, 5275}, {623, 5301},
+                {637, 5044}
         };
 
         String sql = "UPDATE identificacao SET id_zeus = ? WHERE codigo = ?";
